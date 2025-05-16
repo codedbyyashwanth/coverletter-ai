@@ -1,11 +1,20 @@
-import { Button } from "@/components/ui/button"
+// src/App.tsx
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { store } from './store';
+import AppRoutes from './routes/AppRoutes';
+import { Toaster } from './components/ui/Toaster';
 
-const App = () => {
-    return (
-        <div className="flex flex-col items-center justify-center min-h-svh">
-        <Button>Click me</Button>
-        </div>
-    )
-}
+const App: React.FC = () => {
+  return (
+    <Provider store={store}>
+      <BrowserRouter>
+        <AppRoutes />
+        <Toaster />
+      </BrowserRouter>
+    </Provider>
+  );
+};
 
-export default App
+export default App;
