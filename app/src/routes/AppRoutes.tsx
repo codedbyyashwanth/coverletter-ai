@@ -1,6 +1,9 @@
 import React, { Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import MainLayout from '@/components/layouts/MainLayout';
+import { selectCurrentResume } from '@/store/slices/resumeSlice';
+import { selectCurrentJob } from '@/store/slices/jobSlice';
 
 // Pages
 import HomePage from '@/pages/HomePage';
@@ -17,6 +20,29 @@ const LoadingFallback = () => (
   </div>
 );
 
+// Path protection component
+const ProtectedRoute: React.FC<{
+  element: React.ReactNode;
+  requiredData?: {
+    resume?: boolean;
+    job?: boolean;
+  };
+}> = ({ element, requiredData = {} }) => {
+  const resumeData = useSelector(selectCurrentResume);
+  const jobData = useSelector(selectCurrentJob);
+  const location = useLocation();
+
+  if (requiredData.resume && !resumeData) {
+    return <Navigate to="/resume" state={{ from: location }} replace />;
+  }
+
+  if (requiredData.job && !jobData) {
+    return <Navigate to="/job" state={{ from: location }} replace />;
+  }
+
+  return <>{element}</>;
+};
+
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
@@ -31,13 +57,19 @@ const AppRoutes: React.FC = () => {
         
         <Route path="job" element={
           <Suspense fallback={<LoadingFallback />}>
-            <JobPage />
+            <ProtectedRoute 
+              element={<JobPage />}
+              requiredData={{ resume: true }}
+            />
           </Suspense>
         } />
         
         <Route path="cover-letter" element={
           <Suspense fallback={<LoadingFallback />}>
-            <CoverLetterPage />
+            <ProtectedRoute 
+              element={<CoverLetterPage />}
+              requiredData={{ resume: true, job: true }}
+            />
           </Suspense>
         } />
         
