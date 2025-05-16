@@ -1,4 +1,3 @@
-// src/store/index.ts
 import { configureStore } from '@reduxjs/toolkit';
 import resumeReducer from './slices/resumeSlice';
 import jobReducer from './slices/jobSlice';

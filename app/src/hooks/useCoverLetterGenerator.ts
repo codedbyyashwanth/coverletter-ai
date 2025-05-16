@@ -8,7 +8,7 @@ import {
   setCoverLetter,
   setCoverLetterLoading,
   setCoverLetterError,
-} from '../store/slices/coverLetterSlice';
+} from '@/store/slices/coverLetterSlice';
 
 export const useCoverLetterGenerator = () => {
     const dispatch = useDispatch();

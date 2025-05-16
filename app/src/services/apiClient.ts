@@ -1,4 +1,4 @@
-import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, type AxiosInstance } from 'axios';
 
 // Create an axios instance with default configs
 const apiClient: AxiosInstance = axios.create({

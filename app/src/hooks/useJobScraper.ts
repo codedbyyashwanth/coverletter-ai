@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import type { JobData } from '../types/job';
-import { scrapeJob } from '../services/jobService';
-import { setJob, setJobLoading, setJobError } from '../store/slices/jobSlice';
+import type { JobData } from '@/types/job';
+import { scrapeJob } from '@/services/jobService';
+import { setJob, setJobLoading, setJobError } from '@/store/slices/jobSlice';
 
 export const useJobScraper = () => {
     const dispatch = useDispatch();
