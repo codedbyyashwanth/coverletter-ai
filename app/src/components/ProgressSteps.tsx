@@ -1,4 +1,3 @@
-// src/components/ProgressSteps.tsx
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
