@@ -1,12 +1,12 @@
 // src/features/resume/pages/ResumePage.tsx
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { setResume } from '../../../store/slices/resumeSlice';
-import { FileUpload } from '../../../components/ui/FileUpload';
-import { ResumePreview } from '../components/ResumePreview';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { ResumeData } from '@/types/resume';
+import { setResume } from '@/store/slices/resumeSlice';
+import { FileUpload } from '@/components/ui/FileUpload';
+import { ResumePreview } from '@/components/ResumePreview';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import type { ResumeData } from '@/types/resume';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

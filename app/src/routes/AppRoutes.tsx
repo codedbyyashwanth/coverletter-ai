@@ -1,7 +1,6 @@
-// src/routes/AppRoutes.tsx
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { MainLayout } from '@/components/layout/MainLayout';
+import MainLayout from '@/components/layouts/MainLayout';
 
 // Pages
 import HomePage from '@/pages/HomePage';

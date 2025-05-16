@@ -1,5 +1,5 @@
 import apiClient from './apiClient';
-import type { JobData } from '../types/job';
+import type { JobData } from '@/types/job';
 
 export const scrapeJob = async (url: string): Promise<JobData> => {
     try {

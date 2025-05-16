@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { selectCurrentCoverLetter } from '@/store/slices/coverLetterSlice';
-import { Textarea } from '../../../components/ui/Textarea';
-import { Button } from '../../../components/ui/Button';
-import { Card } from '../../../components/ui/Card';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Save, Copy } from 'lucide-react';
 
 interface CoverLetterEditorProps {

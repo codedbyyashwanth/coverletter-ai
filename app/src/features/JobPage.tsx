@@ -3,11 +3,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectCurrentJob, setJob } from '@/store/slices/jobSlice';
 import { selectCurrentResume } from '@/store/slices/resumeSlice';
-import { JobUrlInput } from '../components/JobUrlInput';
-import { JobDetailsForm } from '../components/JobDetailsForm';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/Alert';
+import { JobUrlInput } from '@/components/JobUrlInput';
+import { JobDetailsForm } from '@/components/JobDetailsForm';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import type { JobData } from '@/types/job';
 

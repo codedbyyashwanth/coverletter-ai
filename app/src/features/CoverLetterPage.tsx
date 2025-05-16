@@ -9,15 +9,15 @@ import {
   setCoverLetter,
   setSelectedTemplate,
 } from '@/store/slices/coverLetterSlice';
-import { CoverLetterEditor } from '../components/CoverLetterEditor';
-import { CoverLetterPreview } from '../components/CoverLetterPreview';
-import { TemplateSelector } from '../components/TemplateSelector';
-import { ExportOptions } from '../components/ExportOptions';
-import { Button } from '../../../components/ui/Button';
+import { CoverLetterEditor } from '@/features/CoverLetterEditor';
+import { CoverLetterPreview } from '@/components/CoverLetterPreview';
+import { TemplateSelector } from '@/components/TemplateSelector';
+import { ExportOptions } from '@/components/ExportOptions';
+import { Button } from '@/components/ui/button';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '../../../components/ui/Alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { CoverLetterData } from '@/types/coverLetter';
-import { useCoverLetterGenerator } from '../hooks/useCoverLetterGenerator';
+import { useCoverLetterGenerator } from '@/hooks/useCoverLetterGenerator';
 
 const CoverLetterPage: React.FC = () => {
   const navigate = useNavigate();

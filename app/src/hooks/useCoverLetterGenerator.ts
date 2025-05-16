@@ -1,4 +1,3 @@
-// src/hooks/useCoverLetterGenerator.ts
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import type { ResumeData } from '../types/resume';

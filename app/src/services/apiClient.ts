@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios';
 
 // Create an axios instance with default configs
 const apiClient: AxiosInstance = axios.create({
@@ -11,7 +11,7 @@ const apiClient: AxiosInstance = axios.create({
 
 // Request interceptor for adding auth token
 apiClient.interceptors.request.use(
-    (config: AxiosRequestConfig) => {
+    (config) => {
         // You can add auth token here if needed in the future
         return config;
     },
@@ -22,7 +22,7 @@ apiClient.interceptors.request.use(
 
 // Response interceptor for handling errors
 apiClient.interceptors.response.use(
-    (response: unknown) => {
+    (response) => {
         return response;
     },
     (error: AxiosError) => {
