@@ -1,4 +1,3 @@
-// src/store/slices/coverLetterSlice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { CoverLetterData, Template } from '../../types/coverLetter';
 import type { RootState } from '../index';

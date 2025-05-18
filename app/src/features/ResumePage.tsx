@@ -1,4 +1,3 @@
-// src/features/resume/pages/ResumePage.tsx
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setResume } from '@/store/slices/resumeSlice';
@@ -9,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import type { ResumeData } from '@/types/resume';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { parseResume } from '@/services/resumeService';
+import { toast } from 'sonner';
 
 const ResumePage: React.FC = () => {
   const dispatch = useDispatch();
@@ -18,54 +19,33 @@ const ResumePage: React.FC = () => {
   const [isExtracting, setIsExtracting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileSelected = (file: File) => {
+  const handleFileSelected = async (file: File | null) => {
     setResumeFile(file);
     setError(null);
-    // In a real app, we would extract data from the PDF here
-    // For now, we'll use a mock extraction after a delay
+    
+    if (!file) {
+      // Reset all data when file is removed
+      setExtractedData(null);
+      setIsExtracting(false);
+      return;
+    }
+    
+    // Perform real resume parsing using our service
     setIsExtracting(true);
     
-    setTimeout(() => {
-      // Mock extracted data
-      const mockResumeData: ResumeData = {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '(123) 456-7890',
-        profile: 'Experienced software engineer with expertise in React, Node.js, and TypeScript.',
-        experience: [
-          {
-            company: 'Tech Company',
-            position: 'Senior Developer',
-            startDate: '2020-01',
-            endDate: 'Present',
-            description: [
-              'Led development of a React-based dashboard',
-              'Implemented RESTful APIs using Node.js',
-              'Mentored junior developers'
-            ]
-          },
-          {
-            company: 'Another Tech Company',
-            position: 'Web Developer',
-            startDate: '2018-05',
-            endDate: '2019-12',
-            description: [
-              'Worked on frontend with Angular',
-              'Developed backend services with Express'
-            ]
-          }
-        ],
-        skills: {
-          languages: ['JavaScript', 'TypeScript', 'Python'],
-          frontend: ['React', 'Angular', 'HTML/CSS'],
-          backend: ['Node.js', 'Express', 'MongoDB'],
-          other: ['Git', 'Docker', 'AWS']
-        }
-      };
-      
-      setExtractedData(mockResumeData);
+    try {
+      // Call the actual resume parsing service
+      const parsedData = await parseResume(file);
+      setExtractedData(parsedData);
+      toast.success('Resume parsed successfully');
+    } catch (err) {
+      console.error('Resume parsing failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to parse resume';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
       setIsExtracting(false);
-    }, 2000);
+    }
   };
 
   const handleContinue = () => {
@@ -74,11 +54,12 @@ const ResumePage: React.FC = () => {
       navigate('/job');
     } else {
       setError('Please upload your resume to continue');
+      toast.error('Please upload your resume to continue');
     }
   };
 
   return (
-    <div className="container mx-auto py-8 max-w-4xl">
+    <div className="container mx-auto py-8 px-6">
       <h1 className="text-3xl font-bold mb-8 text-center">Upload Your Resume</h1>
       
       <div className="grid md:grid-cols-2 gap-8">

@@ -1,4 +1,3 @@
-// src/components/layouts/Header.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';

@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const { scrapeJobPosting } = require('./services/webScraper');
 require('dotenv').config();
+const { parseResumeWithAI } = require('./services/resumeParser');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -156,6 +157,23 @@ app.post('/api/scrape-job', async (req, res) => {
         console.error('Error in job scraping endpoint:', error);
         res.status(500).json({ error: 'Failed to scrape job posting' });
     }
+});
+
+// Resume parsing endpoint that accepts text content
+app.post('/api/parse-resume-text', async (req, res) => {
+  try {
+    const { text } = req.body;
+    
+    if (!text || typeof text !== 'string' || text.length < 100) {
+      return res.status(400).json({ error: 'Invalid or insufficient resume text provided' });
+    }
+    
+    const parsedData = await parseResumeWithAI(text);
+    res.json(parsedData);
+  } catch (error) {
+    console.error('Error in resume parsing endpoint:', error);
+    res.status(500).json({ error: 'Failed to parse resume' });
+  }
 });
 
 // Route to generate cover letter

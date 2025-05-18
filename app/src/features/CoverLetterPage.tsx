@@ -88,7 +88,7 @@ const CoverLetterPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-6xl">
+    <div className="container mx-auto py-8 px-6  w-10/12 max-w-none">
       <h1 className="text-3xl font-bold mb-8 text-center">Your Cover Letter</h1>
       
       {(error || generationError) && (
@@ -102,12 +102,12 @@ const CoverLetterPage: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div>
-          <div className="mb-6">
+          <div className="mb-6 flex space-x-4">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleBack}
-              className="flex items-center mb-4"
+              className="flex items-center"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Job Details

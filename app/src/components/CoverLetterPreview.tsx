@@ -39,7 +39,12 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
   
   return (
     <Card className="p-6 shadow-md max-h-[800px] overflow-auto">
-      <div className={`cover-letter-preview ${template.type}`}>
+      {/* Add data-preview-id attribute here for more reliable targeting */}
+      <div 
+        id="cover-letter-preview" 
+        data-preview-id="cover-letter-preview" 
+        className={`cover-letter-preview ${template.type}`}
+      >
         {renderTemplate(coverLetterData, template)}
       </div>
     </Card>

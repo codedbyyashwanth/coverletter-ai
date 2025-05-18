@@ -1,4 +1,3 @@
-// src/features/coverLetter/components/CoverLetterEditor.tsx
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { selectCurrentCoverLetter } from '@/store/slices/coverLetterSlice';

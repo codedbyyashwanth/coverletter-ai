@@ -1,4 +1,3 @@
-// src/features/resume/components/ResumePreview.tsx
 import React from 'react';
 import type { ResumeData } from '@/types/resume';
 import { Card } from '@/components/ui/card';
@@ -33,6 +32,9 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
     );
   }
 
+  // Get all skills (now simplified)
+  const skills = resumeData.skills?.all || [];
+
   return (
     <div className="space-y-6 max-h-[500px] overflow-auto pr-2">
       {/* Personal Info */}
@@ -53,74 +55,19 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
         </div>
       )}
 
-      {/* Skills */}
-      {resumeData.skills && (
+      {/* Skills - now using the simplified structure */}
+      {skills.length > 0 && (
         <div>
           <h4 className="text-md font-medium mb-2">Skills</h4>
-          <div className="space-y-2">
-            {resumeData.skills.languages && (
-              <div>
-                <h5 className="text-sm font-medium text-gray-600">Languages</h5>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {resumeData.skills.languages.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {resumeData.skills.frontend && (
-              <div>
-                <h5 className="text-sm font-medium text-gray-600">Frontend</h5>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {resumeData.skills.frontend.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {resumeData.skills.backend && (
-              <div>
-                <h5 className="text-sm font-medium text-gray-600">Backend</h5>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {resumeData.skills.backend.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="bg-green-100 text-green-800 px-2 py-1 rounded-md text-xs"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {resumeData.skills.other && (
-              <div>
-                <h5 className="text-sm font-medium text-gray-600">Other</h5>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {resumeData.skills.other.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="bg-purple-100 text-purple-800 px-2 py-1 rounded-md text-xs"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+          <div className="flex flex-wrap gap-2 mt-1">
+            {skills.map((skill, index) => (
+              <span
+                key={index}
+                className="bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs"
+              >
+                {skill}
+              </span>
+            ))}
           </div>
         </div>
       )}
