@@ -35,29 +35,34 @@ async function generateCoverLetter(resumeData, jobData) {
             {
                 model: 'gpt-3.5-turbo', // Most cost-effective OpenAI model
                 messages: [
-                {
-                    role: 'system',
-                    content: 'You are a professional cover letter writer. Write a concise, one-page cover letter using the provided resume information.'
-                },
-                {
-                    role: 'user',
-                    content: `Generate a professional cover letter for a job application based on the following information:
-                    
+                    {
+                        role: 'system',
+                        content: 'You are a professional cover‑letter writer. Generate a one‑page, formal cover letter—polished, error‑free, and tailored to the job.'
+                    },
+                    {
+                        role: 'user',
+                        content: `Generate a professional cover letter for a job application based on the following information:
+
                     Resume Information:
                     Name: ${name}
                     Profile: ${profile}
                     Skills: ${skills.join(', ')}
-                    
+
                     Job Information:
                     Company: ${company}
                     Position: ${position}
                     Requirements: ${requirements ? requirements.join(', ') : ''}
-                    
-                    The cover letter should be one page, professional in tone, and highlight how the candidate's skills and experiences align with the job requirements.
-                    Include today's date and a formal letter format with greeting and signature.`
-                }
+
+                    Your cover letter should not be longer than one page.
+                    First paragraph - why you are motivated to apply for the position.
+                    Second paragraph - how you are the most suitable candidate for the position.
+                    Third paragraph - why the company is a good match for you.
+
+                    Use a formal, polite tone and make sure there are no spelling mistakes.
+                    Include today's date, a standard greeting (“Dear [Hiring Manager/Name],”) and a signature block at the end.`
+                    }
                 ],
-                max_tokens: 600, // Increased tokens for a full letter
+                max_tokens: 600, 
                 temperature: 0.7
             },
             {
