@@ -6,4 +6,6 @@ export interface JobData {
     requirements?: string[];
     skills?: string[];
     url?: string;
+    jobType?: string;
+    industry?: string;
 }

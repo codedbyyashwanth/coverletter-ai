@@ -2,13 +2,46 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import type { JobData } from '@/types/job';
-import { Loader, X } from 'lucide-react';
+import { Loader, X, AlertCircle, Plus } from 'lucide-react';
 
 interface JobDetailsFormProps {
   initialJobData: JobData | null;
   onSubmit: (jobData: JobData) => void;
 }
+
+// Common job types for dropdown
+const JOB_TYPES = [
+  "Full-time",
+  "Part-time",
+  "Contract",
+  "Freelance",
+  "Internship",
+  "Remote"
+];
+
+// Common industries
+const INDUSTRIES = [
+  "Technology",
+  "Healthcare",
+  "Finance",
+  "Education",
+  "Retail",
+  "Manufacturing",
+  "Marketing",
+  "Design",
+  "Customer Service",
+  "Sales",
+  "Other"
+];
 
 export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
   initialJobData,
@@ -21,10 +54,14 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
     description: '',
     requirements: [],
     skills: [],
+    jobType: '',
+    industry: ''
   });
+
   const [newRequirement, setNewRequirement] = useState('');
   const [newSkill, setNewSkill] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Update form when initialJobData changes
   useEffect(() => {
@@ -34,6 +71,9 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
         // Ensure these are arrays even if they are undefined in initialJobData
         requirements: initialJobData.requirements || [],
         skills: initialJobData.skills || [],
+        // Add defaults for new fields
+        jobType: initialJobData.jobType || '',
+        industry: initialJobData.industry || ''
       });
     }
   }, [initialJobData]);
@@ -42,6 +82,14 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    setJobData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setValidationError(null);
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setJobData((prev) => ({
       ...prev,
       [name]: value,
@@ -88,7 +136,7 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
     
     // Validate required fields
     if (!jobData.company || !jobData.position) {
-      alert('Company and Position are required fields');
+      setValidationError('Company and Position are required fields');
       setIsSubmitting(false);
       return;
     }
@@ -99,6 +147,14 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {validationError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{validationError}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label htmlFor="company" className="block text-sm font-medium">
@@ -129,17 +185,61 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
         </div>
       </div>
       
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label htmlFor="location" className="block text-sm font-medium">
+            Location
+          </label>
+          <Input
+            id="location"
+            name="location"
+            value={jobData.location || ''}
+            onChange={handleChange}
+            placeholder="Job location (remote, city, etc.)"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="jobType" className="block text-sm font-medium">
+            Job Type
+          </label>
+          <Select
+            value={jobData.jobType || ''}
+            onValueChange={(value) => handleSelectChange('jobType', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select job type" />
+            </SelectTrigger>
+            <SelectContent>
+              {JOB_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
       <div className="space-y-2">
-        <label htmlFor="location" className="block text-sm font-medium">
-          Location
+        <label htmlFor="industry" className="block text-sm font-medium">
+          Industry
         </label>
-        <Input
-          id="location"
-          name="location"
-          value={jobData.location || ''}
-          onChange={handleChange}
-          placeholder="Job location (remote, city, etc.)"
-        />
+        <Select
+          value={jobData.industry || ''}
+          onValueChange={(value) => handleSelectChange('industry', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select industry" />
+          </SelectTrigger>
+          <SelectContent>
+            {INDUSTRIES.map((industry) => (
+              <SelectItem key={industry} value={industry}>
+                {industry}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       
       <div className="space-y-2">
@@ -176,7 +276,7 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
               onClick={handleAddRequirement}
               variant="outline"
             >
-              Add
+              <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </div>
         </div>
@@ -226,7 +326,7 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
               onClick={handleAddSkill}
               variant="outline"
             >
-              Add
+              <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </div>
         </div>
