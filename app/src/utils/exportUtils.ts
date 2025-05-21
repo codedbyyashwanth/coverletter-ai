@@ -1,86 +1,136 @@
-import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { saveAs } from 'file-saver';
 import type { CoverLetterData } from '../types/coverLetter';
 
 /**
- * Polyfill for oklch color parsing - replaces oklch colors with safe fallbacks
- */
-const originalParseColor = window.CSS?.supports 
-  ? window.CSS.supports.bind(window.CSS) 
-  : () => false;
-
-// Override the html2canvas parseColor method to handle oklch
-const patchHtml2Canvas = () => {
-  if (typeof window !== 'undefined' && window.html2canvas) {
-    const originalParse = html2canvas.prototype.parseColor;
-    html2canvas.prototype.parseColor = function(value: string) {
-      // Replace oklch with safe RGB colors
-      if (value.includes('oklch')) {
-        // Use a safe fallback color
-        return originalParse.call(this, '#000000');
-      }
-      return originalParse.call(this, value);
-    };
-  }
-};
-
-/**
- * Export cover letter to PDF using html2canvas and jsPDF
+ * Creates a professional cover letter PDF with proper formatting
  */
 export const exportToPdf = async (
   coverLetterData: CoverLetterData,
-  templateId: string,
+  editedContent: string | null,
   filename: string
 ): Promise<void> => {
   try {
-    // Find the cover letter preview element
-    const element = document.getElementById('cover-letter-preview');
-    if (!element) {
-      throw new Error('Cover letter preview element not found');
-    }
-
-    // Patch html2canvas to handle oklch colors
-    patchHtml2Canvas();
-
-    // Create canvas from the element
-    const canvas = await html2canvas(element, {
-      scale: 2, // Higher scale for better quality
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-      // Custom parse function to handle oklch colors
-      onclone: (document) => {
-        // Find all elements with oklch colors and replace with safe colors
-        const elements = document.querySelectorAll('*');
-        elements.forEach((el) => {
-          const style = window.getComputedStyle(el);
-          const backgroundColor = style.backgroundColor;
-          const color = style.color;
-          
-          if (backgroundColor.includes('oklch')) {
-            el.style.backgroundColor = '#ffffff';
-          }
-          
-          if (color.includes('oklch')) {
-            el.style.color = '#000000';
-          }
-        });
-      }
-    });
-
-    // Calculate dimensions
-    const imgData = canvas.toDataURL('image/png');
+    // Create a new PDF document
     const pdf = new jsPDF({
       orientation: 'portrait',
-      unit: 'px',
-      format: 'a4',
+      unit: 'pt',
+      format: 'a4'
     });
-
-    const imgWidth = 595; // A4 width in pixels at 72 dpi
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    // Set font
+    pdf.setFont("helvetica");
+    
+    // Parse the edited content
+    const content = editedContent || '';
+    const lines = content.split('\n');
+    
+    // Set initial position and line height
+    let y = 40;
+    const lineHeight = 14;
+    const leftMargin = 60;
+    const rightColStart = 350;
+    
+    // Function to add a line of text
+    const addLine = (text: string, x: number, currentY: number, fontStyle?: string) => {
+      if (fontStyle) pdf.setFont("helvetica", fontStyle);
+      else pdf.setFont("helvetica", "normal");
+      
+      pdf.setFontSize(11);
+      pdf.text(text, x, currentY);
+      return currentY + lineHeight;
+    };
+    
+    // Determine if we should process content as blocks or individual lines
+    let inContactBlock = true;
+    let inCompanyBlock = false;
+    let inBodyBlock = false;
+    let isSubjectLine = false;
+    let isDate = false;
+    
+    // Contact info coordinates
+    const contactX = rightColStart;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Skip empty lines but add spacing
+      if (line === '') {
+        y += lineHeight;
+        
+        // Empty line might indicate transition between blocks
+        if (inContactBlock && i > 3) {
+          inContactBlock = false;
+          inCompanyBlock = true;
+          y = 150; // Reset position for company block
+        } else if (inCompanyBlock && !inBodyBlock && i > 7) {
+          inCompanyBlock = false;
+          isDate = true;
+        }
+        continue;
+      }
+      
+      // Process contact information (right-aligned)
+      if (inContactBlock) {
+        y = addLine(line, contactX, y);
+        continue;
+      }
+      
+      // Process company information (left-aligned)
+      if (inCompanyBlock) {
+        y = addLine(line, leftMargin, y);
+        continue;
+      }
+      
+      // Process date line (right-aligned)
+      if (isDate) {
+        y = addLine(line, rightColStart, y);
+        isDate = false;
+        isSubjectLine = true;
+        y += lineHeight * 2; // Add space after date
+        continue;
+      }
+      
+      // Process subject line (bold, left-aligned)
+      if (isSubjectLine) {
+        y = addLine(line, leftMargin, y, "bold");
+        isSubjectLine = false;
+        inBodyBlock = true;
+        y += lineHeight * 2; // Add space after subject
+        continue;
+      }
+      
+      // Process body text (with special handling for bullet points)
+      if (inBodyBlock) {
+        if (line.startsWith('•')) {
+          // Handle bullet points with indentation
+          const parts = line.split('•');
+          const bulletText = parts[1] ? parts[1].trim() : '';
+          
+          // Split long bullet points to fit the page
+          const maxWidth = pdf.internal.pageSize.width - 140;
+          const bulletLines = pdf.splitTextToSize(bulletText, maxWidth);
+          
+          pdf.text('•', leftMargin, y);
+          pdf.text(bulletLines, leftMargin + 15, y);
+          
+          // Move down by the height of all wrapped lines
+          y += lineHeight * bulletLines.length;
+        } else {
+          // Regular paragraph text
+          const maxWidth = pdf.internal.pageSize.width - 120;
+          const textLines = pdf.splitTextToSize(line, maxWidth);
+          
+          pdf.text(textLines, leftMargin, y);
+          y += lineHeight * textLines.length;
+        }
+        
+        // Add space after paragraphs
+        y += lineHeight * 0.5;
+      }
+    }
+    
+    // Save the PDF
     pdf.save(filename);
   } catch (error) {
     console.error('Error exporting PDF:', error);
@@ -89,114 +139,67 @@ export const exportToPdf = async (
 };
 
 /**
- * Alternative PDF export method that doesn't rely on color parsing
- */
-export const exportToPdfAlternative = async (
-  coverLetterData: CoverLetterData,
-  templateId: string,
-  filename: string
-): Promise<void> => {
-  try {
-    // Get the content and create a simpler version for PDF export
-    const { content } = coverLetterData;
-    const userName = coverLetterData.resumeData?.name || 'Your Name';
-    const userEmail = coverLetterData.resumeData?.email || '';
-    const userPhone = coverLetterData.resumeData?.phone || '';
-    const companyName = coverLetterData.jobData?.company || 'Company Name';
-    
-    // Create a new PDF document
-    const pdf = new jsPDF();
-    
-    // Add a title
-    pdf.setFontSize(16);
-    pdf.text('Cover Letter', 105, 15, { align: 'center' });
-    
-    // Add sender info
-    pdf.setFontSize(12);
-    pdf.text(userName, 20, 30);
-    if (userEmail) pdf.text(userEmail, 20, 37);
-    if (userPhone) pdf.text(userPhone, 20, 44);
-    
-    // Add date
-    const today = new Date();
-    pdf.text(today.toLocaleDateString(), 20, 55);
-    
-    // Add recipient
-    pdf.text(`Hiring Manager`, 20, 70);
-    pdf.text(companyName, 20, 77);
-    
-    // Add greeting
-    pdf.text('Dear Hiring Manager,', 20, 90);
-    
-    // Add the content - split into lines to fit the page
-    const splitContent = pdf.splitTextToSize(content, 170);
-    pdf.text(splitContent, 20, 105);
-    
-    // Add signature
-    const signatureY = 105 + (splitContent.length * 7) + 20;
-    pdf.text('Sincerely,', 20, signatureY);
-    pdf.text(userName, 20, signatureY + 10);
-    
-    // Save the PDF
-    pdf.save(filename);
-  } catch (error) {
-    console.error('Error with alternative PDF export:', error);
-    throw error;
-  }
-};
-
-/**
- * Export cover letter to Word document
+ * Export cover letter to Word document with professional formatting
  */
 export const exportToWord = async (
   coverLetterData: CoverLetterData,
+  editedContent: string | null,
   filename: string
 ): Promise<void> => {
   try {
-    const { content } = coverLetterData;
-    const userName = coverLetterData.resumeData?.name || 'Your Name';
-    const userEmail = coverLetterData.resumeData?.email || '';
-    const userPhone = coverLetterData.resumeData?.phone || '';
-    const companyName = coverLetterData.jobData?.company || 'Company Name';
+    // Use edited content directly
+    const content = editedContent || '';
     
-    // Format for Word document (using HTML)
+    // Format for Word document (using HTML with professional styling)
     const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Cover Letter - ${userName}</title>
+        <title>Cover Letter</title>
         <style>
-          body { font-family: 'Calibri', sans-serif; margin: 1in; }
-          .header { margin-bottom: 20px; }
-          .date { margin: 20px 0; }
-          .recipient { margin-bottom: 20px; }
-          .greeting { margin-bottom: 20px; }
-          .content { margin-bottom: 30px; line-height: 1.5; }
-          .signature { margin-top: 30px; }
+          body {
+            font-family: 'Calibri', Arial, sans-serif;
+            margin: 1in;
+            line-height: 1.15;
+            font-size: 11pt;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5em;
+          }
+          .contact-info {
+            text-align: right;
+          }
+          .recipient {
+            margin-bottom: 1em;
+          }
+          .date {
+            text-align: right;
+            margin: 2em 0;
+          }
+          .subject {
+            font-weight: bold;
+            margin-bottom: 1.5em;
+          }
+          .content {
+            margin-bottom: 1.5em;
+          }
+          .bullets {
+            padding-left: 1.5em;
+          }
+          .bullet-point {
+            margin-bottom: 0.5em;
+          }
+          .signature {
+            margin-top: 2em;
+          }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div>${userName}</div>
-          ${userEmail ? `<div>${userEmail}</div>` : ''}
-          ${userPhone ? `<div>${userPhone}</div>` : ''}
-        </div>
-        
-        <div class="date">${new Date().toLocaleDateString()}</div>
-        
-        <div class="recipient">
-          <div>Hiring Manager</div>
-          <div>${companyName}</div>
-        </div>
-        
-        <div class="greeting">Dear Hiring Manager,</div>
-        
-        <div class="content">${content.replace(/\n/g, '<br>')}</div>
-        
-        <div class="signature">
-          <div>Sincerely,</div>
-          <div>${userName}</div>
+        <div class="document">
+          ${formatWordDocument(content)}
         </div>
       </body>
       </html>
@@ -210,6 +213,115 @@ export const exportToWord = async (
     throw error;
   }
 };
+
+/**
+ * Helper function to format content for Word export
+ */
+function formatWordDocument(content: string): string {
+  const lines = content.split('\n');
+  let html = '';
+  
+  let inContactBlock = true;
+  let inCompanyBlock = false;
+  let inBodyBlock = false;
+  let isSubjectLine = false;
+  let isDate = false;
+  
+  let contactHtml = '<div class="contact-info">';
+  let companyHtml = '<div class="recipient">';
+  let contentHtml = '<div class="content">';
+  let dateHtml = '';
+  let subjectHtml = '';
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Skip empty lines
+    if (line === '') {
+      // Empty line might indicate transition between blocks
+      if (inContactBlock && i > 3) {
+        inContactBlock = false;
+        inCompanyBlock = true;
+      } else if (inCompanyBlock && !inBodyBlock && i > 7) {
+        inCompanyBlock = false;
+        isDate = true;
+      }
+      continue;
+    }
+    
+    // Process contact information
+    if (inContactBlock) {
+      contactHtml += `${line}<br>`;
+      continue;
+    }
+    
+    // Process company information
+    if (inCompanyBlock) {
+      companyHtml += `${line}<br>`;
+      continue;
+    }
+    
+    // Process date line
+    if (isDate) {
+      dateHtml = `<div class="date">${line}</div>`;
+      isDate = false;
+      isSubjectLine = true;
+      continue;
+    }
+    
+    // Process subject line
+    if (isSubjectLine) {
+      subjectHtml = `<div class="subject">${line}</div>`;
+      isSubjectLine = false;
+      inBodyBlock = true;
+      continue;
+    }
+    
+    // Process body text
+    if (inBodyBlock) {
+      if (line.startsWith('•')) {
+        // Start a bullet list if not already started
+        if (!contentHtml.includes('<ul class="bullets">')) {
+          contentHtml += '<ul class="bullets">';
+        }
+        
+        // Add bullet point
+        const bulletText = line.substring(1).trim();
+        contentHtml += `<li class="bullet-point">${bulletText}</li>`;
+      } else {
+        // Close the bullet list if one was open
+        if (contentHtml.includes('<ul class="bullets">') && !contentHtml.includes('</ul>')) {
+          contentHtml += '</ul>';
+        }
+        
+        // Add paragraph
+        contentHtml += `<p>${line}</p>`;
+      }
+    }
+  }
+  
+  // Close any open tags
+  if (contentHtml.includes('<ul class="bullets">') && !contentHtml.includes('</ul>')) {
+    contentHtml += '</ul>';
+  }
+  
+  contactHtml += '</div>';
+  companyHtml += '</div>';
+  contentHtml += '</div>';
+  
+  // Combine all sections
+  html = `
+    <div class="header">
+      ${companyHtml}
+      ${contactHtml}
+    </div>
+    ${dateHtml}
+    ${subjectHtml}
+    ${contentHtml}
+  `;
+  
+  return html;
+}
 
 /**
  * Copy cover letter text to clipboard

@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSelector } from 'react-redux';
-import { selectCurrentCoverLetter, selectSelectedTemplateId } from '@/store/slices/coverLetterSlice';
+import { 
+  selectCurrentCoverLetter, 
+  selectEditedContent
+} from '@/store/slices/coverLetterSlice';
 import { Download, Copy, FileText, Loader } from 'lucide-react';
 import { toast } from 'sonner';
-import { exportToPdf, exportToWord, copyToClipboard, exportToPdfAlternative } from '@/utils/exportUtils';
+import { exportToPdf, exportToWord, copyToClipboard } from '@/utils/exportUtils';
 
 export const ExportOptions: React.FC = () => {
   const currentCoverLetter = useSelector(selectCurrentCoverLetter);
-  const selectedTemplateId = useSelector(selectSelectedTemplateId);
+  const editedContent = useSelector(selectEditedContent);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isExportingWord, setIsExportingWord] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -19,36 +22,34 @@ export const ExportOptions: React.FC = () => {
   }
 
   const handleExportPDF = async () => {
-    if (!currentCoverLetter) return;
+    if (!currentCoverLetter || !editedContent) return;
     
     setIsExportingPdf(true);
     try {
-      // Try the alternative direct PDF generation method first
-      await exportToPdfAlternative(currentCoverLetter, selectedTemplateId || 'modern', 'cover-letter.pdf');
+      await exportToPdf(
+        currentCoverLetter, 
+        editedContent,
+        'cover-letter.pdf'
+      );
       toast.success('Cover letter exported as PDF');
     } catch (error) {
-      console.error('Error with alternative PDF export, trying standard method:', error);
-      
-      try {
-        // Fall back to the standard html2canvas method
-        await exportToPdf(currentCoverLetter, selectedTemplateId || 'modern', 'cover-letter.pdf');
-        toast.success('Cover letter exported as PDF');
-      } catch (secondError) {
-        console.error('Error exporting PDF:', secondError);
-        toast.error('Failed to export as PDF. Try exporting as Word instead.');
-      }
+      console.error('Error exporting PDF:', error);
+      toast.error('Failed to export as PDF. Try exporting as Word instead.');
     } finally {
       setIsExportingPdf(false);
     }
   };
 
   const handleExportWord = async () => {
-    if (!currentCoverLetter) return;
+    if (!currentCoverLetter || !editedContent) return;
     
     setIsExportingWord(true);
     try {
-      // Export the cover letter to Word document
-      await exportToWord(currentCoverLetter, 'cover-letter.docx');
+      await exportToWord(
+        currentCoverLetter, 
+        editedContent,
+        'cover-letter.docx'
+      );
       toast.success('Cover letter exported as Word document');
     } catch (error) {
       console.error('Error exporting Word:', error);
@@ -59,10 +60,10 @@ export const ExportOptions: React.FC = () => {
   };
 
   const handleCopyToClipboard = async () => {
-    if (!currentCoverLetter?.content) return;
+    if (!editedContent) return;
     
     try {
-      await copyToClipboard(currentCoverLetter.content);
+      await copyToClipboard(editedContent);
       setIsCopied(true);
       toast.success('Cover letter copied to clipboard');
       setTimeout(() => setIsCopied(false), 2000);
@@ -78,7 +79,7 @@ export const ExportOptions: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Button
           onClick={handleExportPDF}
-          disabled={isExportingPdf || !currentCoverLetter}
+          disabled={isExportingPdf || !editedContent}
           className="flex items-center justify-center"
         >
           {isExportingPdf ? (
@@ -96,7 +97,7 @@ export const ExportOptions: React.FC = () => {
         
         <Button
           onClick={handleExportWord}
-          disabled={isExportingWord || !currentCoverLetter}
+          disabled={isExportingWord || !editedContent}
           variant="outline"
           className="flex items-center justify-center"
         >
@@ -115,7 +116,7 @@ export const ExportOptions: React.FC = () => {
         
         <Button
           onClick={handleCopyToClipboard}
-          disabled={!currentCoverLetter}
+          disabled={!editedContent}
           variant="outline"
           className="flex items-center justify-center"
         >
@@ -125,8 +126,8 @@ export const ExportOptions: React.FC = () => {
       </div>
       
       <p className="mt-6 text-sm text-gray-600">
-        Tip: Customize your cover letter before exporting for the best results.
-        The {selectedTemplateId} template will be used for export.
+        Tip: Your exported document will maintain professional formatting including contact positioning, 
+        bullet points, and proper spacing between sections.
       </p>
     </Card>
   );

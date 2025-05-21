@@ -8,7 +8,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Copy } from 'lucide-react';
+import { Copy, FileText } from 'lucide-react';
 
 export const CoverLetterEditor: React.FC = () => {
   const dispatch = useDispatch();
@@ -26,40 +26,59 @@ export const CoverLetterEditor: React.FC = () => {
         return;
       }
 
-      // Otherwise, generate the full letter from scratch
-      const today = new Date();
-      const formattedDate = today.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      
+      // Get user info
       const userName = currentCoverLetter.resumeData?.name || 'Your Name';
       const userEmail = currentCoverLetter.resumeData?.email || 'your.email@example.com';
       const userPhone = currentCoverLetter.resumeData?.phone || 'your phone';
       const companyName = currentCoverLetter.jobData?.company || 'Company Name';
       const position = currentCoverLetter.jobData?.position || 'Position';
       
-      // Format the full cover letter with all elements
-      const fullCoverLetter = `${formattedDate}
-
-Hiring Manager
-${companyName}
-${currentCoverLetter.jobData?.location || ''}
-
-Dear Hiring Manager,
-
-${currentCoverLetter.content}
-
-Sincerely,
-
-${userName}
-${userEmail}
-${userPhone}`;
+      // Format today's date
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString('en-US', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
       
-      setLocalContent(fullCoverLetter);
+      // Create content blocks from the generated letter
+      const contentBlocks = currentCoverLetter.content.split('\n\n');
+      
+      // Extract main paragraphs
+      let mainContent = '';
+      if (contentBlocks.length >= 3) {
+        mainContent = contentBlocks.slice(0, -1).join('\n\n');
+      } else {
+        mainContent = currentCoverLetter.content;
+      }
+      
+      // Create a professional template
+      const professionalTemplate = `${userName}
+Street Address Line
+City, State ZIP
+${userPhone}
+${userEmail}
+
+${companyName}
+Hiring Team
+Company Location
+
+City, ${formattedDate}
+
+Application for ${position}
+
+Dear Hiring Team,
+
+${mainContent}
+
+I would welcome the opportunity to discuss how my skills and experiences can contribute to your team's success. Thank you for considering my application, and I look forward to your response.
+
+Best regards,
+${userName}`;
+      
+      setLocalContent(professionalTemplate);
       // Also update Redux state
-      dispatch(updateEditedContent(fullCoverLetter));
+      dispatch(updateEditedContent(professionalTemplate));
     }
   }, [currentCoverLetter, editedContent, dispatch]);
 
@@ -76,6 +95,26 @@ ${userPhone}`;
     setTimeout(() => setIsCopied(false), 2000);
   };
 
+  const addBulletPoints = () => {
+    // Insert bullet points at cursor position or at the end
+    const textarea = document.querySelector('textarea');
+    const cursorPos = textarea?.selectionStart || localContent.length;
+    
+    const bulletTemplate = `
+- First accomplishment or skill
+- Second accomplishment or skill
+- Third accomplishment or skill
+`;
+
+    const newContent = 
+      localContent.substring(0, cursorPos) + 
+      bulletTemplate + 
+      localContent.substring(cursorPos);
+    
+    setLocalContent(newContent);
+    dispatch(updateEditedContent(newContent));
+  };
+
   if (!currentCoverLetter) {
     return null;
   }
@@ -85,6 +124,15 @@ ${userPhone}`;
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-semibold">Edit Your Cover Letter</h2>
         <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={addBulletPoints}
+            className="flex items-center"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Add Bullet Points
+          </Button>
           <Button 
             variant="outline" 
             size="sm" 
@@ -100,11 +148,13 @@ ${userPhone}`;
       <Textarea
         value={localContent}
         onChange={handleContentChange}
-        className="min-h-[400px] font-mono text-sm"
+        className="min-h-[500px] font-mono text-sm"
       />
 
       <p className="mt-3 text-sm text-gray-500">
-        Tip: Edit the cover letter to personalize it further. Any changes you make will immediately appear in the preview.
+        <strong>Tip:</strong> Format your cover letter as shown in the template above. 
+        Include your contact details at the top right, company details on the left, 
+        and use bullet points (•) for listing accomplishments.
       </p>
     </Card>
   );
