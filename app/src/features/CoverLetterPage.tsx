@@ -6,7 +6,6 @@ import { selectCurrentJob } from '@/store/slices/jobSlice';
 import {
   selectCurrentCoverLetter,
   selectSelectedTemplateId,
-  setCoverLetter,
   setSelectedTemplate,
 } from '@/store/slices/coverLetterSlice';
 import { CoverLetterEditor } from '@/features/CoverLetterEditor';
@@ -56,16 +55,6 @@ const CoverLetterPage: React.FC = () => {
 
   const handleTemplateChange = (templateId: string) => {
     dispatch(setSelectedTemplate(templateId));
-  };
-
-  const handleSaveContent = (content: string) => {
-    if (currentCoverLetter) {
-      dispatch(setCoverLetter({
-        ...currentCoverLetter,
-        content,
-        lastEdited: new Date(),
-      }));
-    }
   };
 
   const handleRegenerateLetter = async () => {
@@ -131,7 +120,7 @@ const CoverLetterPage: React.FC = () => {
           />
           
           <CoverLetterEditor 
-            onSave={handleSaveContent}
+            
           />
         </div>
         

@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 async function generateCoverLetter(resumeData, jobData) {
     try {
         // Extract resume and job information
-        const { name, profile, experience } = resumeData;
+        const { name, profile, experience, email, phone } = resumeData;
         const { company, position, requirements } = jobData;
         
         // Get skills from resume
@@ -28,16 +28,18 @@ async function generateCoverLetter(resumeData, jobData) {
             if (resumeData.skills.backend) skills.push(...resumeData.skills.backend);
             if (resumeData.skills.other) skills.push(...resumeData.skills.other);
         }
+
+        const date = new Date();
+        const todayDate = date.toDateString();
         
-        // Use OpenAI's gpt-3.5-turbo which is their most cost-effective model
         const response = await axios.post(
             'https://api.openai.com/v1/chat/completions',
             {
-                model: 'gpt-3.5-turbo', // Most cost-effective OpenAI model
+                model: 'gpt-3.5-turbo', 
                 messages: [
                     {
                         role: 'system',
-                        content: 'You are a professional cover‑letter writer. Generate a one‑page, formal cover letter—polished, error‑free, and tailored to the job.'
+                        content: 'You are a professional cover letter writer. Generate a one-page, formal cover letter—polished, error-free, and tailored to the job.'
                     },
                     {
                         role: 'user',
@@ -46,20 +48,33 @@ async function generateCoverLetter(resumeData, jobData) {
                     Resume Information:
                     Name: ${name}
                     Profile: ${profile}
+                    Email: ${email}
+                    Phone: ${phone}
                     Skills: ${skills.join(', ')}
+                    Experience: ${experience}
 
                     Job Information:
                     Company: ${company}
                     Position: ${position}
                     Requirements: ${requirements ? requirements.join(', ') : ''}
 
-                    Your cover letter should not be longer than one page.
-                    First paragraph - why you are motivated to apply for the position.
-                    Second paragraph - how you are the most suitable candidate for the position.
-                    Third paragraph - why the company is a good match for you.
+                    Today's Date: ${todayDate}
 
-                    Use a formal, polite tone and make sure there are no spelling mistakes.
-                    Include today's date, a standard greeting (“Dear [Hiring Manager/Name],”) and a signature block at the end.`
+                    Format:
+                    - At the top, include the candidate’s name, email, and phone number.
+                    - Include today’s date below the contact information.
+                    - Address the letter to “Dear Hiring Manager,” or use a specific name if available.
+                    - Use three structured paragraphs:
+                    1. Why the candidate is motivated to apply for the position.
+                    2. Why the candidate is the most suitable person for the job, aligned with listed requirements.
+                    3. Why the company is a good match for the candidate.
+                    - End with a professional closing (e.g., "Sincerely") followed by the candidate’s full name (no repetition).
+                    - Company name should be mentioned appropriately in the letter body.
+
+                    Tone:
+                    - Use a formal, polite tone.
+                    - Ensure the letter is concise and fits on one page (250–300 words).
+                    - Do not include placeholders or template tags like [Address] or repeat the signature.`
                     }
                 ],
                 max_tokens: 600, 
@@ -77,73 +92,10 @@ async function generateCoverLetter(resumeData, jobData) {
     } catch (error) {
         console.error('Error generating cover letter with OpenAI:', error);
         // Fallback to template if API call fails
-        return generateFallbackCoverLetter(resumeData, jobData);
+        // return generateFallbackCoverLetter(resumeData, jobData);
     }
 }
 
-// Simple template-based fallback for cover letter generation
-async function generateCoverLetter(resumeData, jobData) {
-    try {
-        // Extract resume and job information
-        const { name, profile, experience } = resumeData;
-        const { company, position, requirements } = jobData;
-        
-        // Get skills from resume
-        let skills = [];
-        if (resumeData.skills) {
-            if (resumeData.skills.languages) skills.push(...resumeData.skills.languages);
-            if (resumeData.skills.frontend) skills.push(...resumeData.skills.frontend);
-            if (resumeData.skills.backend) skills.push(...resumeData.skills.backend);
-            if (resumeData.skills.other) skills.push(...resumeData.skills.other);
-        }
-        
-        // Updated to use chat completions endpoint
-        const response = await axios.post(
-            'https://api.openai.com/v1/chat/completions',
-            {
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a professional cover letter writer. Write a concise, one-page cover letter using the provided resume information.'
-                    },
-                    {
-                        role: 'user',
-                        content: `Generate a professional cover letter for a job application based on the following information:
-                        
-                        Resume Information:
-                        Name: ${name}
-                        Profile: ${profile}
-                        Skills: ${skills.join(', ')}
-                        
-                        Job Information:
-                        Company: ${company}
-                        Position: ${position}
-                        Requirements: ${requirements ? requirements.join(', ') : ''}
-                        
-                        The cover letter should be one page, professional in tone, and highlight how the candidate's skills and experiences align with the job requirements.
-                        Include today's date and a formal letter format with greeting and signature.`
-                    }
-                ],
-                max_tokens: 800,
-                temperature: 0.7
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-        
-        // Updated response handling for chat completions
-        return response.data.choices[0].message.content.trim();
-    } catch (error) {
-        console.error('Error generating cover letter with OpenAI:', error);
-        // Fallback to template if API call fails
-        return generateFallbackCoverLetter(resumeData, jobData);
-    }
-}
 
 // Route to scrape job posting
 app.post('/api/scrape-job', async (req, res) => {

@@ -4,13 +4,11 @@ import { selectCurrentCoverLetter } from '@/store/slices/coverLetterSlice';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Save, Copy } from 'lucide-react';
+import { Copy } from 'lucide-react';
 
-interface CoverLetterEditorProps {
-  onSave: (content: string) => void;
-}
 
-export const CoverLetterEditor: React.FC<CoverLetterEditorProps> = ({ onSave }) => {
+
+export const CoverLetterEditor: React.FC = () => {
   const currentCoverLetter = useSelector(selectCurrentCoverLetter);
   const [content, setContent] = useState<string>('');
   const [isCopied, setIsCopied] = useState(false);
@@ -23,10 +21,6 @@ export const CoverLetterEditor: React.FC<CoverLetterEditorProps> = ({ onSave }) 
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
-  };
-
-  const handleSave = () => {
-    onSave(content);
   };
 
   const handleCopy = () => {
@@ -52,14 +46,6 @@ export const CoverLetterEditor: React.FC<CoverLetterEditorProps> = ({ onSave }) 
           >
             <Copy className="mr-2 h-4 w-4" />
             {isCopied ? 'Copied!' : 'Copy'}
-          </Button>
-          <Button 
-            size="sm" 
-            onClick={handleSave}
-            className="flex items-center"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            Save
           </Button>
         </div>
       </div>
