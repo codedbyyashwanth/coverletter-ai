@@ -3,7 +3,8 @@ import { saveAs } from 'file-saver';
 import type { CoverLetterData } from '../types/coverLetter';
 
 /**
- * Creates a professional cover letter PDF with proper formatting
+ * Creates a professional cover letter PDF with left-aligned text,
+ * vertically centered block and consistent spacing on a single page.
  */
 export const exportToPdf = async (
   coverLetterData: CoverLetterData,
@@ -11,126 +12,66 @@ export const exportToPdf = async (
   filename: string
 ): Promise<void> => {
   try {
-    // Create a new PDF document
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'pt',
-      format: 'a4'
-    });
-    
-    // Set font
-    pdf.setFont("helvetica");
-    
-    // Parse the edited content
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(12);
+
+    // Parse lines
     const content = editedContent || '';
-    const lines = content.split('\n');
-    
-    // Set initial position and line height
-    let y = 40;
-    const lineHeight = 14;
-    const leftMargin = 60;
-    const rightColStart = 350;
-    
-    // Function to add a line of text
-    const addLine = (text: string, x: number, currentY: number, fontStyle?: string) => {
-      if (fontStyle) pdf.setFont("helvetica", fontStyle);
-      else pdf.setFont("helvetica", "normal");
-      
-      pdf.setFontSize(11);
-      pdf.text(text, x, currentY);
-      return currentY + lineHeight;
-    };
-    
-    // Determine if we should process content as blocks or individual lines
-    let inContactBlock = true;
-    let inCompanyBlock = false;
-    let inBodyBlock = false;
-    let isSubjectLine = false;
-    let isDate = false;
-    
-    // Contact info coordinates
-    const contactX = rightColStart;
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      // Skip empty lines but add spacing
-      if (line === '') {
-        y += lineHeight;
-        
-        // Empty line might indicate transition between blocks
-        if (inContactBlock && i > 3) {
-          inContactBlock = false;
-          inCompanyBlock = true;
-          y = 150; // Reset position for company block
-        } else if (inCompanyBlock && !inBodyBlock && i > 7) {
-          inCompanyBlock = false;
-          isDate = true;
-        }
-        continue;
-      }
-      
-      // Process contact information (right-aligned)
-      if (inContactBlock) {
-        y = addLine(line, contactX, y);
-        continue;
-      }
-      
-      // Process company information (left-aligned)
-      if (inCompanyBlock) {
-        y = addLine(line, leftMargin, y);
-        continue;
-      }
-      
-      // Process date line (right-aligned)
-      if (isDate) {
-        y = addLine(line, rightColStart, y);
-        isDate = false;
-        isSubjectLine = true;
-        y += lineHeight * 2; // Add space after date
-        continue;
-      }
-      
-      // Process subject line (bold, left-aligned)
-      if (isSubjectLine) {
-        y = addLine(line, leftMargin, y, "bold");
-        isSubjectLine = false;
-        inBodyBlock = true;
-        y += lineHeight * 2; // Add space after subject
-        continue;
-      }
-      
-      // Process body text (with special handling for bullet points)
-      if (inBodyBlock) {
-        if (line.startsWith('•')) {
-          // Handle bullet points with indentation
-          const parts = line.split('•');
-          const bulletText = parts[1] ? parts[1].trim() : '';
-          
-          // Split long bullet points to fit the page
-          const maxWidth = pdf.internal.pageSize.width - 140;
-          const bulletLines = pdf.splitTextToSize(bulletText, maxWidth);
-          
-          pdf.text('•', leftMargin, y);
-          pdf.text(bulletLines, leftMargin + 15, y);
-          
-          // Move down by the height of all wrapped lines
-          y += lineHeight * bulletLines.length;
-        } else {
-          // Regular paragraph text
-          const maxWidth = pdf.internal.pageSize.width - 120;
-          const textLines = pdf.splitTextToSize(line, maxWidth);
-          
-          pdf.text(textLines, leftMargin, y);
-          y += lineHeight * textLines.length;
-        }
-        
-        // Add space after paragraphs
-        y += lineHeight * 0.5;
-      }
+    const rawLines = content.split('\n');
+    const lines: { text: string; style?: 'bold'; isBullet?: boolean }[] = [];
+
+    // Include subject if provided
+    if (coverLetterData.subject) {
+      lines.push({ text: coverLetterData.subject, style: 'bold' });
+      lines.push({ text: '' });
     }
-    
-    // Save the PDF
+
+    rawLines.forEach(raw => {
+      const txt = raw.trim();
+      if (!txt) {
+        lines.push({ text: '' });
+      } else if (txt.startsWith('•')) {
+        lines.push({ text: txt, isBullet: true });
+      } else {
+        lines.push({ text: txt });
+      }
+    });
+
+    // Layout
+    const lineHeight = 18;
+    const totalHeight = lines.length * lineHeight;
+    const startY = (pageHeight - totalHeight) / 2; // vertical centering
+    const leftMargin = 60;
+
+    let y = startY;
+    for (const line of lines) {
+      if (y + lineHeight > pageHeight) break;
+      // Set style
+      pdf.setFont('helvetica', line.style === 'bold' ? 'bold' : 'normal');
+      pdf.setFontSize(12);
+
+      if (line.isBullet) {
+        // Draw bullet then text
+        pdf.text('•', leftMargin, y);
+        const bulletText = line.text.substring(1).trim();
+        const maxWidth = pageWidth - leftMargin * 2;
+        const wrapped = pdf.splitTextToSize(bulletText, maxWidth - 15);
+        pdf.text(wrapped, leftMargin + 15, y);
+        y += lineHeight * wrapped.length;
+      } else {
+        // Regular text with wrap
+        const maxWidth = pageWidth - leftMargin * 2;
+        const wrapped = pdf.splitTextToSize(line.text, maxWidth);
+        pdf.text(wrapped, leftMargin, y);
+        y += lineHeight * wrapped.length;
+      }
+      y += 4; // small extra spacing
+    }
+
     pdf.save(filename);
   } catch (error) {
     console.error('Error exporting PDF:', error);
@@ -139,7 +80,8 @@ export const exportToPdf = async (
 };
 
 /**
- * Export cover letter to Word document with professional formatting
+ * Exports cover letter to Word document with professional styling.
+ * (No horizontal centering applied here.)
  */
 export const exportToWord = async (
   coverLetterData: CoverLetterData,
@@ -147,10 +89,7 @@ export const exportToWord = async (
   filename: string
 ): Promise<void> => {
   try {
-    // Use edited content directly
     const content = editedContent || '';
-    
-    // Format for Word document (using HTML with professional styling)
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -158,54 +97,21 @@ export const exportToWord = async (
         <meta charset="utf-8">
         <title>Cover Letter</title>
         <style>
-          body {
-            font-family: 'Calibri', Arial, sans-serif;
-            margin: 1in;
-            line-height: 1.15;
-            font-size: 11pt;
-          }
-          .header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1.5em;
-          }
-          .contact-info {
-            text-align: right;
-          }
-          .recipient {
-            margin-bottom: 1em;
-          }
-          .date {
-            text-align: right;
-            margin: 2em 0;
-          }
-          .subject {
-            font-weight: bold;
-            margin-bottom: 1.5em;
-          }
-          .content {
-            margin-bottom: 1.5em;
-          }
-          .bullets {
-            padding-left: 1.5em;
-          }
-          .bullet-point {
-            margin-bottom: 0.5em;
-          }
-          .signature {
-            margin-top: 2em;
-          }
+          body { font-family: 'Calibri', Arial, sans-serif; margin: 1in; line-height: 1.15; font-size: 11pt; }
+          .content { margin-top: 1em; }
+          .bullet-list { padding-left: 1.5em; }
+          .bullet-item { margin-bottom: 0.5em; }
         </style>
       </head>
       <body>
-        <div class="document">
+        ${coverLetterData.subject ? `<h2>${coverLetterData.subject}</h2>` : ''}
+        <div class="content">
           ${formatWordDocument(content)}
         </div>
       </body>
       </html>
     `;
-    
-    // Convert to Blob and save
+
     const blob = new Blob([htmlContent], { type: 'application/msword' });
     saveAs(blob, filename);
   } catch (error) {
@@ -214,118 +120,27 @@ export const exportToWord = async (
   }
 };
 
-/**
- * Helper function to format content for Word export
- */
 function formatWordDocument(content: string): string {
   const lines = content.split('\n');
   let html = '';
-  
-  let inContactBlock = true;
-  let inCompanyBlock = false;
-  let inBodyBlock = false;
-  let isSubjectLine = false;
-  let isDate = false;
-  
-  let contactHtml = '<div class="contact-info">';
-  let companyHtml = '<div class="recipient">';
-  let contentHtml = '<div class="content">';
-  let dateHtml = '';
-  let subjectHtml = '';
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    
-    // Skip empty lines
-    if (line === '') {
-      // Empty line might indicate transition between blocks
-      if (inContactBlock && i > 3) {
-        inContactBlock = false;
-        inCompanyBlock = true;
-      } else if (inCompanyBlock && !inBodyBlock && i > 7) {
-        inCompanyBlock = false;
-        isDate = true;
-      }
-      continue;
+  let inList = false;
+  lines.forEach(raw => {
+    const text = raw.trim();
+    if (!text) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<p>&nbsp;</p>';
+    } else if (text.startsWith('•')) {
+      if (!inList) { html += '<ul class="bullet-list">'; inList = true; }
+      html += `<li class="bullet-item">${text.substring(1).trim()}</li>`;
+    } else {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<p>${text}</p>`;
     }
-    
-    // Process contact information
-    if (inContactBlock) {
-      contactHtml += `${line}<br>`;
-      continue;
-    }
-    
-    // Process company information
-    if (inCompanyBlock) {
-      companyHtml += `${line}<br>`;
-      continue;
-    }
-    
-    // Process date line
-    if (isDate) {
-      dateHtml = `<div class="date">${line}</div>`;
-      isDate = false;
-      isSubjectLine = true;
-      continue;
-    }
-    
-    // Process subject line
-    if (isSubjectLine) {
-      subjectHtml = `<div class="subject">${line}</div>`;
-      isSubjectLine = false;
-      inBodyBlock = true;
-      continue;
-    }
-    
-    // Process body text
-    if (inBodyBlock) {
-      if (line.startsWith('•')) {
-        // Start a bullet list if not already started
-        if (!contentHtml.includes('<ul class="bullets">')) {
-          contentHtml += '<ul class="bullets">';
-        }
-        
-        // Add bullet point
-        const bulletText = line.substring(1).trim();
-        contentHtml += `<li class="bullet-point">${bulletText}</li>`;
-      } else {
-        // Close the bullet list if one was open
-        if (contentHtml.includes('<ul class="bullets">') && !contentHtml.includes('</ul>')) {
-          contentHtml += '</ul>';
-        }
-        
-        // Add paragraph
-        contentHtml += `<p>${line}</p>`;
-      }
-    }
-  }
-  
-  // Close any open tags
-  if (contentHtml.includes('<ul class="bullets">') && !contentHtml.includes('</ul>')) {
-    contentHtml += '</ul>';
-  }
-  
-  contactHtml += '</div>';
-  companyHtml += '</div>';
-  contentHtml += '</div>';
-  
-  // Combine all sections
-  html = `
-    <div class="header">
-      ${companyHtml}
-      ${contactHtml}
-    </div>
-    ${dateHtml}
-    ${subjectHtml}
-    ${contentHtml}
-  `;
-  
+  });
+  if (inList) html += '</ul>';
   return html;
 }
 
-/**
- * Copy cover letter text to clipboard
- */
 export const copyToClipboard = async (text: string): Promise<void> => {
   try {
     await navigator.clipboard.writeText(text);

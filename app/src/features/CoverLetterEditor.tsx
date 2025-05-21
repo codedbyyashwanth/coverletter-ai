@@ -52,18 +52,15 @@ export const CoverLetterEditor: React.FC = () => {
         mainContent = currentCoverLetter.content;
       }
       
-      // Create a professional template
+      // Create a professional template without placeholder address lines
       const professionalTemplate = `${userName}
-Street Address Line
-City, State ZIP
 ${userPhone}
 ${userEmail}
 
 ${companyName}
 Hiring Team
-Company Location
 
-City, ${formattedDate}
+${formattedDate}
 
 Application for ${position}
 
@@ -153,7 +150,7 @@ ${userName}`;
 
       <p className="mt-3 text-sm text-gray-500">
         <strong>Tip:</strong> Format your cover letter as shown in the template above. 
-        Include your contact details at the top right, company details on the left, 
+        Include your contact details at the top, company details, 
         and use bullet points (•) for listing accomplishments.
       </p>
     </Card>
