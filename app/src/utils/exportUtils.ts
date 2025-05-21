@@ -2,10 +2,7 @@ import { jsPDF } from 'jspdf';
 import { saveAs } from 'file-saver';
 import type { CoverLetterData } from '../types/coverLetter';
 
-/**
- * Creates a professional cover letter PDF with left-aligned text,
- * vertically centered block and consistent spacing on a single page.
- */
+
 export const exportToPdf = async (
   coverLetterData: CoverLetterData,
   editedContent: string | null,
@@ -17,59 +14,55 @@ export const exportToPdf = async (
     const pageHeight = pdf.internal.pageSize.getHeight();
 
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(12);
+    pdf.setFontSize(11);
 
-    // Parse lines
+    // Margins and spacing
+    const leftMargin = 60;
+    const topMargin = 60;
+    const bottomMargin = 60;
+    const maxWidth = pageWidth - leftMargin * 2;
+    const lineHeight = 14; // fixed line height
+    const paragraphGap = 7; // small gap after blank line
+
+    // Prepare lines array
     const content = editedContent || '';
     const rawLines = content.split('\n');
-    const lines: { text: string; style?: 'bold'; isBullet?: boolean }[] = [];
+    const lines: { text: string; isBullet: boolean }[] = [];
 
-    // Include subject if provided
     if (coverLetterData.subject) {
-      lines.push({ text: coverLetterData.subject, style: 'bold' });
-      lines.push({ text: '' });
+      lines.push({ text: coverLetterData.subject, isBullet: false });
+      lines.push({ text: '', isBullet: false });
     }
-
     rawLines.forEach(raw => {
       const txt = raw.trim();
-      if (!txt) {
-        lines.push({ text: '' });
-      } else if (txt.startsWith('•')) {
-        lines.push({ text: txt, isBullet: true });
-      } else {
-        lines.push({ text: txt });
-      }
+      lines.push({ text: txt, isBullet: txt.startsWith('•') });
     });
 
-    // Layout
-    const lineHeight = 18;
-    const totalHeight = lines.length * lineHeight;
-    const startY = (pageHeight - totalHeight) / 2; // vertical centering
-    const leftMargin = 60;
-
-    let y = startY;
+    // Draw content
+    let y = topMargin;
     for (const line of lines) {
-      if (y + lineHeight > pageHeight) break;
-      // Set style
-      pdf.setFont('helvetica', line.style === 'bold' ? 'bold' : 'normal');
-      pdf.setFontSize(12);
-
+      if (y > pageHeight - bottomMargin) break;
+      if (!line.text) {
+        // blank line
+        y += paragraphGap;
+        continue;
+      }
       if (line.isBullet) {
-        // Draw bullet then text
+        pdf.setFont('helvetica', 'normal');
+        // draw bullet
         pdf.text('•', leftMargin, y);
-        const bulletText = line.text.substring(1).trim();
-        const maxWidth = pageWidth - leftMargin * 2;
-        const wrapped = pdf.splitTextToSize(bulletText, maxWidth - 15);
+        // wrap bullet text
+        const wrapped = pdf.splitTextToSize(line.text.substring(1).trim(), maxWidth - 15);
         pdf.text(wrapped, leftMargin + 15, y);
         y += lineHeight * wrapped.length;
       } else {
-        // Regular text with wrap
-        const maxWidth = pageWidth - leftMargin * 2;
+        pdf.setFont('helvetica', 'normal');
         const wrapped = pdf.splitTextToSize(line.text, maxWidth);
         pdf.text(wrapped, leftMargin, y);
         y += lineHeight * wrapped.length;
       }
-      y += 4; // small extra spacing
+      // after each printed line, advance by lineHeight
+      y += 0; // already moved by wrapped.length * lineHeight
     }
 
     pdf.save(filename);
@@ -81,7 +74,6 @@ export const exportToPdf = async (
 
 /**
  * Exports cover letter to Word document with professional styling.
- * (No horizontal centering applied here.)
  */
 export const exportToWord = async (
   coverLetterData: CoverLetterData,
@@ -97,10 +89,10 @@ export const exportToWord = async (
         <meta charset="utf-8">
         <title>Cover Letter</title>
         <style>
-          body { font-family: 'Calibri', Arial, sans-serif; margin: 1in; line-height: 1.15; font-size: 11pt; }
+          body { font-family: 'Calibri', Arial, sans-serif; margin: 1in; line-height: 1.2; font-size: 11pt; }
           .content { margin-top: 1em; }
-          .bullet-list { padding-left: 1.5em; }
-          .bullet-item { margin-bottom: 0.5em; }
+          .bullet-list { padding-left: 1.5em; margin-bottom: 0.5em; }
+          .bullet-item { margin-bottom: 0.25em; }
         </style>
       </head>
       <body>
