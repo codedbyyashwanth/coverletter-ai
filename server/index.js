@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 async function generateCoverLetter(resumeData, jobData) {
     try {
         // Extract resume and job information
-        const { name, profile, experience, email, phone } = resumeData;
+        const { name, profile, experience } = resumeData;
         const { company, position, requirements } = jobData;
         
         // Get skills from resume
@@ -28,56 +28,36 @@ async function generateCoverLetter(resumeData, jobData) {
             if (resumeData.skills.backend) skills.push(...resumeData.skills.backend);
             if (resumeData.skills.other) skills.push(...resumeData.skills.other);
         }
-
-        const date = new Date();
-        const todayDate = date.toDateString();
         
+        // Prompt for only body paragraphs
         const response = await axios.post(
             'https://api.openai.com/v1/chat/completions',
             {
-                model: 'gpt-3.5-turbo', 
+                model: 'gpt-3.5-turbo',
                 messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a professional cover letter writer. Generate a one-page, formal cover letter—polished, error-free, and tailored to the job.'
-                    },
-                    {
-                        role: 'user',
-                        content: `Generate a professional cover letter for a job application based on the following information:
-
+                {
+                    role: 'system',
+                    content: 'You are a professional cover letter writer. Write only the body paragraphs of a cover letter.'
+                },
+                {
+                    role: 'user',
+                    content: `Generate only the body paragraphs for a professional cover letter based on the following information:
+                    
                     Resume Information:
                     Name: ${name}
                     Profile: ${profile}
-                    Email: ${email}
-                    Phone: ${phone}
                     Skills: ${skills.join(', ')}
-                    Experience: ${experience}
-
+                    
                     Job Information:
                     Company: ${company}
                     Position: ${position}
                     Requirements: ${requirements ? requirements.join(', ') : ''}
-
-                    Today's Date: ${todayDate}
-
-                    Format:
-                    - At the top, include the candidate’s name, email, and phone number.
-                    - Include today’s date below the contact information.
-                    - Address the letter to “Dear Hiring Manager,” or use a specific name if available.
-                    - Use three structured paragraphs:
-                    1. Why the candidate is motivated to apply for the position.
-                    2. Why the candidate is the most suitable person for the job, aligned with listed requirements.
-                    3. Why the company is a good match for the candidate.
-                    - End with a professional closing (e.g., "Sincerely") followed by the candidate’s full name (no repetition).
-                    - Company name should be mentioned appropriately in the letter body.
-
-                    Tone:
-                    - Use a formal, polite tone.
-                    - Ensure the letter is concise and fits on one page (250–300 words).
-                    - Do not include placeholders or template tags like [Address] or repeat the signature.`
-                    }
+                    
+                    Write 3-4 paragraphs that highlight how the candidate's skills and experiences align with the job requirements. 
+                    Do NOT include date, recipient, greeting, or signature lines.`
+                }
                 ],
-                max_tokens: 600, 
+                max_tokens: 500,
                 temperature: 0.7
             },
             {
@@ -91,9 +71,35 @@ async function generateCoverLetter(resumeData, jobData) {
         return response.data.choices[0].message.content.trim();
     } catch (error) {
         console.error('Error generating cover letter with OpenAI:', error);
-        // Fallback to template if API call fails
-        // return generateFallbackCoverLetter(resumeData, jobData);
+        return generateFallbackCoverLetterBody(resumeData, jobData);
     }
+}
+
+// Simplified fallback function that only returns body paragraphs
+function generateFallbackCoverLetterBody(resumeData, jobData) {
+    // Extract data
+    const { name, profile, experience } = resumeData;
+    const { company, position } = jobData;
+    
+    // Get skills
+    let skills = [];
+    if (resumeData.skills) {
+        if (resumeData.skills.languages) skills.push(...resumeData.skills.languages);
+        if (resumeData.skills.frontend) skills.push(...resumeData.skills.frontend);
+        if (resumeData.skills.backend) skills.push(...resumeData.skills.backend);
+        if (resumeData.skills.other) skills.push(...resumeData.skills.other);
+    }
+    
+    // Get most recent experience
+    const recentExperience = experience && experience.length > 0 ? experience[0] : null;
+    
+    return `I am writing to express my strong interest in the ${position} position at ${company}. With my background in ${recentExperience?.position || 'software development'} and experience with ${skills.slice(0, 3).join(', ')}, I believe I would be a valuable addition to your team.
+
+${profile || `As a dedicated professional, I have consistently delivered high-quality results while focusing on efficiency and collaboration.`}
+
+During my time at ${recentExperience?.company || 'my previous company'}, I have gained valuable experience in ${skills.slice(0, 2).join(' and ')}. I've successfully completed projects that required ${skills.slice(2, 4).join(' and ')}, which directly aligns with the requirements for this position.
+
+I am particularly excited about the opportunity to join ${company} because of your reputation for innovation and commitment to excellence. I believe my skills and experience align well with what you're looking for in a ${position}. I would welcome the opportunity to discuss how my background can benefit your team.`;
 }
 
 

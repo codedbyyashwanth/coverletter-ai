@@ -5,6 +5,7 @@ import type { RootState } from '../index';
 interface CoverLetterState {
     currentCoverLetter: CoverLetterData | null;
     templates: Template[];
+    editedContent: string | null;
     selectedTemplateId: string | null;
     loading: boolean;
     error: string | null;
@@ -40,6 +41,7 @@ const initialTemplates: Template[] = [
 const initialState: CoverLetterState = {
     currentCoverLetter: null,
     templates: initialTemplates,
+    editedContent: null,
     selectedTemplateId: 'modern',
     loading: false,
     error: null,
@@ -51,10 +53,14 @@ const coverLetterSlice = createSlice({
     reducers: {
         setCoverLetter: (state, action: PayloadAction<CoverLetterData>) => {
         state.currentCoverLetter = action.payload;
+        state.editedContent = null;
         state.error = null;
         },
         clearCoverLetter: (state) => {
         state.currentCoverLetter = null;
+        },
+        updateEditedContent: (state, action: PayloadAction<string>) => {
+            state.editedContent = action.payload;
         },
         setSelectedTemplate: (state, action: PayloadAction<string>) => {
         state.selectedTemplateId = action.payload;
@@ -72,12 +78,14 @@ const coverLetterSlice = createSlice({
 export const {
   setCoverLetter,
   clearCoverLetter,
+  updateEditedContent,
   setSelectedTemplate,
   setCoverLetterLoading,
   setCoverLetterError,
 } = coverLetterSlice.actions;
 
 // Selectors
+export const selectEditedContent = (state: RootState) => state.coverLetter.editedContent;
 export const selectCurrentCoverLetter = (state: RootState) => state.coverLetter.currentCoverLetter;
 export const selectTemplates = (state: RootState) => state.coverLetter.templates;
 export const selectSelectedTemplateId = (state: RootState) => state.coverLetter.selectedTemplateId;
