@@ -18,22 +18,29 @@ export const ExportOptions: React.FC = () => {
     return null;
   }
 
-
-const handleExportPDF = async () => {
-  if (!currentCoverLetter) return;
-  
-  setIsExportingPdf(true);
-  try {
-    // Try the alternative direct PDF generation method
-    await exportToPdfAlternative(currentCoverLetter, selectedTemplateId || 'modern', 'cover-letter.pdf');
-    toast.success('Cover letter exported as PDF');
-  } catch (error) {
-    console.error('Error exporting PDF:', error);
-    toast.error('Failed to export as PDF');
-  } finally {
-    setIsExportingPdf(false);
-  }
-};
+  const handleExportPDF = async () => {
+    if (!currentCoverLetter) return;
+    
+    setIsExportingPdf(true);
+    try {
+      // Try the alternative direct PDF generation method first
+      await exportToPdfAlternative(currentCoverLetter, selectedTemplateId || 'modern', 'cover-letter.pdf');
+      toast.success('Cover letter exported as PDF');
+    } catch (error) {
+      console.error('Error with alternative PDF export, trying standard method:', error);
+      
+      try {
+        // Fall back to the standard html2canvas method
+        await exportToPdf(currentCoverLetter, selectedTemplateId || 'modern', 'cover-letter.pdf');
+        toast.success('Cover letter exported as PDF');
+      } catch (secondError) {
+        console.error('Error exporting PDF:', secondError);
+        toast.error('Failed to export as PDF. Try exporting as Word instead.');
+      }
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
 
   const handleExportWord = async () => {
     if (!currentCoverLetter) return;

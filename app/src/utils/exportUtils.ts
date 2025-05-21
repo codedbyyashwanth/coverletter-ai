@@ -1,261 +1,224 @@
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { jsPDF } from 'jspdf';
 import { saveAs } from 'file-saver';
-import type { CoverLetterData } from '@/types/coverLetter';
+import type { CoverLetterData } from '../types/coverLetter';
 
 /**
- * Export cover letter as PDF
+ * Polyfill for oklch color parsing - replaces oklch colors with safe fallbacks
  */
+const originalParseColor = window.CSS?.supports 
+  ? window.CSS.supports.bind(window.CSS) 
+  : () => false;
 
-export const exportToPdf = async (elementId: string, fileName: string = 'cover-letter.pdf'): Promise<void> => {
+// Override the html2canvas parseColor method to handle oklch
+const patchHtml2Canvas = () => {
+  if (typeof window !== 'undefined' && window.html2canvas) {
+    const originalParse = html2canvas.prototype.parseColor;
+    html2canvas.prototype.parseColor = function(value: string) {
+      // Replace oklch with safe RGB colors
+      if (value.includes('oklch')) {
+        // Use a safe fallback color
+        return originalParse.call(this, '#000000');
+      }
+      return originalParse.call(this, value);
+    };
+  }
+};
+
+/**
+ * Export cover letter to PDF using html2canvas and jsPDF
+ */
+export const exportToPdf = async (
+  coverLetterData: CoverLetterData,
+  templateId: string,
+  filename: string
+): Promise<void> => {
   try {
-    // Try multiple ways to find the element
-    let element = document.getElementById(elementId);
-    
-    // If not found by ID, try data attribute
+    // Find the cover letter preview element
+    const element = document.getElementById('cover-letter-preview');
     if (!element) {
-      element = document.querySelector(`[data-preview-id="${elementId}"]`);
+      throw new Error('Cover letter preview element not found');
     }
-    
-    // As a last resort, try to find by class
-    if (!element) {
-      element = document.querySelector('.cover-letter-preview');
-    }
-    
-    if (!element) {
-      console.error('Cover letter element not found. Searched for:', elementId);
-      throw new Error('Cover letter element not found. Make sure the preview is visible.');
-    }
-    
-    // Give DOM time to fully render
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Capture the element as canvas
+
+    // Patch html2canvas to handle oklch colors
+    patchHtml2Canvas();
+
+    // Create canvas from the element
     const canvas = await html2canvas(element, {
       scale: 2, // Higher scale for better quality
       useCORS: true,
-      logging: true, // Enable logging to debug
+      logging: false,
       backgroundColor: '#ffffff',
-      onclone: (clonedDoc) => {
-        // Make sure the cloned element is visible
-        const clonedElement = clonedDoc.getElementById(elementId) || 
-                             clonedDoc.querySelector(`[data-preview-id="${elementId}"]`) ||
-                             clonedDoc.querySelector('.cover-letter-preview');
-        
-        if (clonedElement) {
-          clonedElement.style.height = 'auto';
-          clonedElement.style.overflow = 'visible';
-          clonedElement.style.position = 'absolute';
-          clonedElement.style.top = '0';
-          clonedElement.style.left = '0';
-          clonedElement.style.visibility = 'visible';
-        }
-        
-        // Give time for styles to apply
-        return new Promise(resolve => setTimeout(resolve, 500));
+      // Custom parse function to handle oklch colors
+      onclone: (document) => {
+        // Find all elements with oklch colors and replace with safe colors
+        const elements = document.querySelectorAll('*');
+        elements.forEach((el) => {
+          const style = window.getComputedStyle(el);
+          const backgroundColor = style.backgroundColor;
+          const color = style.color;
+          
+          if (backgroundColor.includes('oklch')) {
+            el.style.backgroundColor = '#ffffff';
+          }
+          
+          if (color.includes('oklch')) {
+            el.style.color = '#000000';
+          }
+        });
       }
     });
-    
-    // Rest of the function remains the same...
+
+    // Calculate dimensions
     const imgData = canvas.toDataURL('image/png');
-    
-    // Create PDF in A4 format
     const pdf = new jsPDF({
       orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
+      unit: 'px',
+      format: 'a4',
     });
+
+    const imgWidth = 595; // A4 width in pixels at 72 dpi
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    // Calculate image dimensions to fit A4 while maintaining aspect ratio
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-    const imgX = (pdfWidth - imgWidth * ratio) / 2;
-    const imgY = 0;
-    
-    pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-    pdf.save(fileName);
-    
-    return Promise.resolve();
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    pdf.save(filename);
   } catch (error) {
-    console.error('Error exporting to PDF:', error);
-    return Promise.reject(error);
+    console.error('Error exporting PDF:', error);
+    throw error;
   }
 };
 
 /**
- * Format cover letter content for Word export
+ * Alternative PDF export method that doesn't rely on color parsing
  */
-const formatCoverLetterForDoc = (coverLetterData: CoverLetterData): string[] => {
-  // Split the content into paragraphs
-  const paragraphs = coverLetterData.content.split('\n\n').filter(p => p.trim() !== '');
-  
-  // For a Word doc, we need to add the header (name, email, phone)
-  const header = [
-    coverLetterData.resumeData?.name || 'Your Name',
-    coverLetterData.resumeData?.email || '',
-    coverLetterData.resumeData?.phone || '',
-    '', // Empty line
-    'Hiring Manager',
-    coverLetterData.jobData?.company || 'Company Name',
-    '', // Empty line
-    'Dear Hiring Manager,'
-  ];
-  
-  return [...header, ...paragraphs];
-};
-
-/**
- * Export cover letter as Word document
- */
-export const exportToWord = async (coverLetterData: CoverLetterData, fileName: string = 'cover-letter.docx'): Promise<void> => {
+export const exportToPdfAlternative = async (
+  coverLetterData: CoverLetterData,
+  templateId: string,
+  filename: string
+): Promise<void> => {
   try {
-    // Get formatted paragraphs
-    const paragraphs = formatCoverLetterForDoc(coverLetterData);
+    // Get the content and create a simpler version for PDF export
+    const { content } = coverLetterData;
+    const userName = coverLetterData.resumeData?.name || 'Your Name';
+    const userEmail = coverLetterData.resumeData?.email || '';
+    const userPhone = coverLetterData.resumeData?.phone || '';
+    const companyName = coverLetterData.jobData?.company || 'Company Name';
     
-    // Create docx document
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: paragraphs.map((text, index) => {
-          // First few paragraphs are header
-          if (index === 0) {
-            // Name
-            return new Paragraph({
-              text,
-              heading: HeadingLevel.HEADING_1,
-              spacing: {
-                after: 200
-              }
-            });
-          } else if (index < 3 && index > 0) {
-            // Contact info
-            return new Paragraph({
-              children: [new TextRun(text)],
-              spacing: {
-                after: 100
-              }
-            });
-          } else if (index === 4 || index === 5) {
-            // Company info
-            return new Paragraph({
-              children: [new TextRun(text)],
-              spacing: {
-                after: 100
-              }
-            });
-          } else if (index === 7) {
-            // Greeting
-            return new Paragraph({
-              children: [new TextRun(text)],
-              spacing: {
-                after: 400
-              }
-            });
-          } else if (index === paragraphs.length - 1) {
-            // Closing
-            return new Paragraph({
-              children: [new TextRun(text)],
-              spacing: {
-                before: 400
-              }
-            });
-          } else {
-            // Normal paragraph
-            return new Paragraph({
-              children: [new TextRun(text)],
-              spacing: {
-                after: 200
-              }
-            });
-          }
-        })
-      }]
-    });
-    
-    // Generate the document
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, fileName);
-    
-    return Promise.resolve();
-  } catch (error) {
-    console.error('Error exporting to Word:', error);
-    return Promise.reject(error);
-  }
-};
-
-export const exportToPdfAlternative = async (coverLetterData: CoverLetterData, templateId: string, fileName: string = 'cover-letter.pdf'): Promise<void> => {
-  try {
     // Create a new PDF document
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+    const pdf = new jsPDF();
     
-    // Generate HTML content programmatically instead of capturing from DOM
-    const content = coverLetterData.content;
-    const paragraphs = content.split('\n\n').filter(p => p.trim() !== '');
+    // Add a title
+    pdf.setFontSize(16);
+    pdf.text('Cover Letter', 105, 15, { align: 'center' });
     
-    // Add header info
-    const name = coverLetterData.resumeData?.name || 'Your Name';
-    pdf.setFontSize(18);
-    pdf.text(name, 20, 20);
+    // Add sender info
+    pdf.setFontSize(12);
+    pdf.text(userName, 20, 30);
+    if (userEmail) pdf.text(userEmail, 20, 37);
+    if (userPhone) pdf.text(userPhone, 20, 44);
     
-    pdf.setFontSize(10);
-    if (coverLetterData.resumeData?.email) {
-      pdf.text(coverLetterData.resumeData.email, 20, 30);
-    }
+    // Add date
+    const today = new Date();
+    pdf.text(today.toLocaleDateString(), 20, 55);
     
-    if (coverLetterData.resumeData?.phone) {
-      pdf.text(coverLetterData.resumeData.phone, 20, 35);
-    }
-    
-    // Add company info
-    pdf.text('Hiring Manager', 20, 50);
-    pdf.text(coverLetterData.jobData?.company || 'Company Name', 20, 55);
+    // Add recipient
+    pdf.text(`Hiring Manager`, 20, 70);
+    pdf.text(companyName, 20, 77);
     
     // Add greeting
-    pdf.text('Dear Hiring Manager,', 20, 70);
+    pdf.text('Dear Hiring Manager,', 20, 90);
     
-    // Add paragraphs
-    let yPosition = 80;
-    pdf.setFontSize(11);
-    
-    paragraphs.forEach(paragraph => {
-      const splitText = pdf.splitTextToSize(paragraph, 170);
-      pdf.text(splitText, 20, yPosition);
-      yPosition += 10 * splitText.length;
-    });
+    // Add the content - split into lines to fit the page
+    const splitContent = pdf.splitTextToSize(content, 170);
+    pdf.text(splitContent, 20, 105);
     
     // Add signature
-    yPosition += 10;
-    pdf.text('Sincerely,', 20, yPosition);
-    yPosition += 10;
-    pdf.text(name, 20, yPosition);
+    const signatureY = 105 + (splitContent.length * 7) + 20;
+    pdf.text('Sincerely,', 20, signatureY);
+    pdf.text(userName, 20, signatureY + 10);
     
-    pdf.save(fileName);
-    
-    return Promise.resolve();
+    // Save the PDF
+    pdf.save(filename);
   } catch (error) {
-    console.error('Error creating PDF:', error);
-    return Promise.reject(error);
+    console.error('Error with alternative PDF export:', error);
+    throw error;
   }
 };
 
 /**
- * Copy cover letter content to clipboard
+ * Export cover letter to Word document
+ */
+export const exportToWord = async (
+  coverLetterData: CoverLetterData,
+  filename: string
+): Promise<void> => {
+  try {
+    const { content } = coverLetterData;
+    const userName = coverLetterData.resumeData?.name || 'Your Name';
+    const userEmail = coverLetterData.resumeData?.email || '';
+    const userPhone = coverLetterData.resumeData?.phone || '';
+    const companyName = coverLetterData.jobData?.company || 'Company Name';
+    
+    // Format for Word document (using HTML)
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Cover Letter - ${userName}</title>
+        <style>
+          body { font-family: 'Calibri', sans-serif; margin: 1in; }
+          .header { margin-bottom: 20px; }
+          .date { margin: 20px 0; }
+          .recipient { margin-bottom: 20px; }
+          .greeting { margin-bottom: 20px; }
+          .content { margin-bottom: 30px; line-height: 1.5; }
+          .signature { margin-top: 30px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>${userName}</div>
+          ${userEmail ? `<div>${userEmail}</div>` : ''}
+          ${userPhone ? `<div>${userPhone}</div>` : ''}
+        </div>
+        
+        <div class="date">${new Date().toLocaleDateString()}</div>
+        
+        <div class="recipient">
+          <div>Hiring Manager</div>
+          <div>${companyName}</div>
+        </div>
+        
+        <div class="greeting">Dear Hiring Manager,</div>
+        
+        <div class="content">${content.replace(/\n/g, '<br>')}</div>
+        
+        <div class="signature">
+          <div>Sincerely,</div>
+          <div>${userName}</div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    // Convert to Blob and save
+    const blob = new Blob([htmlContent], { type: 'application/msword' });
+    saveAs(blob, filename);
+  } catch (error) {
+    console.error('Error exporting Word document:', error);
+    throw error;
+  }
+};
+
+/**
+ * Copy cover letter text to clipboard
  */
 export const copyToClipboard = async (text: string): Promise<void> => {
   try {
     await navigator.clipboard.writeText(text);
-    return Promise.resolve();
   } catch (error) {
     console.error('Error copying to clipboard:', error);
-    return Promise.reject(error);
+    throw error;
   }
 };
