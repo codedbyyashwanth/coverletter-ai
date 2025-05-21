@@ -15,6 +15,7 @@ import { Loader, X, AlertCircle, Plus } from 'lucide-react';
 
 interface JobDetailsFormProps {
   initialJobData: JobData | null;
+  scrapingFailed?: boolean; // New prop to determine if scraping failed
   onSubmit: (jobData: JobData) => void;
 }
 
@@ -45,6 +46,7 @@ const INDUSTRIES = [
 
 export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
   initialJobData,
+  scrapingFailed = false, // Default to false if not provided
   onSubmit,
 }) => {
   const [jobData, setJobData] = useState<JobData>({
@@ -242,19 +244,22 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
         </Select>
       </div>
       
-      <div className="space-y-2">
-        <label htmlFor="description" className="block text-sm font-medium">
-          Job Description
-        </label>
-        <Textarea
-          id="description"
-          name="description"
-          value={jobData.description || ''}
-          onChange={handleChange}
-          placeholder="Enter the job description here"
-          rows={5}
-        />
-      </div>
+      {/* Conditionally render the Job Description field only when scraping failed */}
+      {scrapingFailed && (
+        <div className="space-y-2">
+          <label htmlFor="description" className="block text-sm font-medium">
+            Job Description
+          </label>
+          <Textarea
+            id="description"
+            name="description"
+            value={jobData.description || ''}
+            onChange={handleChange}
+            placeholder="Enter the job description here"
+            rows={5}
+          />
+        </div>
+      )}
       
       <div className="space-y-4">
         <div className="space-y-2">

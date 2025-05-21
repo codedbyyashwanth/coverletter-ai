@@ -17,6 +17,8 @@ const JobPage: React.FC = () => {
   const currentJob = useSelector(selectCurrentJob);
   const resumeData = useSelector(selectCurrentResume);
   const [error, setError] = useState<string | null>(null);
+  // New state to track if scraping was attempted and failed
+  const [scrapingFailed, setScrapingFailed] = useState<boolean>(false);
 
   // Redirect if no resume data
   if (!resumeData) {
@@ -27,6 +29,10 @@ const JobPage: React.FC = () => {
   const handleJobScraped = (success: boolean) => {
     if (success) {
       setError(null);
+      setScrapingFailed(false);
+    } else {
+      // Mark scraping as failed when scraper returns failure
+      setScrapingFailed(true);
     }
   };
 
@@ -69,10 +75,13 @@ const JobPage: React.FC = () => {
       <Card className="p-6 shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">Enter Job Details</h2>
         <p className="text-gray-600 mb-4">
-          Enter the job details manually or edit the automatically extracted information.
+          {scrapingFailed 
+            ? "Job scraping failed. Please enter the job details manually." 
+            : "Edit the automatically extracted information or enter details manually."}
         </p>
         <JobDetailsForm 
           initialJobData={currentJob}
+          scrapingFailed={scrapingFailed}
           onSubmit={handleJobDetailsSubmit}
         />
       </Card>
