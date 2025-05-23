@@ -124,15 +124,6 @@ ${userName}`;
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={addBulletPoints}
-            className="flex items-center"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Add Bullet Points
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
             onClick={handleCopy}
             className="flex items-center"
           >
