@@ -1,143 +1,310 @@
-import { jsPDF } from 'jspdf';
+// Fixed export utilities with proper color handling and template styling
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
-import type { CoverLetterData } from '../types/coverLetter';
+import type { CoverLetterData } from '@/types/coverLetter';
+import ReactDOMServer from 'react-dom/server';
+import {
+  ModernTemplate,
+  ClassicTemplate,
+  CreativeTemplate,
+  MinimalTemplate
+} from '@/components/templates';
+import React from 'react';
 
+// Helper to get template component based on type
+const getTemplateComponent = (templateType: string) => {
+  switch (templateType) {
+    case 'modern':
+      return ModernTemplate;
+    case 'classic':
+      return ClassicTemplate;
+    case 'creative':
+      return CreativeTemplate;
+    case 'minimal':
+    default:
+      return MinimalTemplate;
+  }
+};
 
 export const exportToPdf = async (
   coverLetterData: CoverLetterData,
-  editedContent: string | null,
-  filename: string
+  editedContent: string,
+  filename: string = 'cover-letter.pdf'
 ): Promise<void> => {
   try {
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+    const templateId = coverLetterData.templateId || 'modern';
+    const TemplateComponent = getTemplateComponent(templateId);
+    
+    // Create a temporary div to render the template
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '0';
+    tempDiv.style.width = '794px'; // A4 width in pixels at 96 DPI
+    tempDiv.style.minHeight = '1123px'; // A4 height in pixels at 96 DPI
+    tempDiv.style.backgroundColor = '#ffffff';
+    tempDiv.style.fontFamily = 'Arial, sans-serif';
+    document.body.appendChild(tempDiv);
 
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(11);
+    // Render the template with export styles
+    const templateHtml = ReactDOMServer.renderToString(
+      React.createElement(TemplateComponent, {
+        coverLetterData,
+        content: editedContent,
+        isExport: true
+      })
+    );
+    
+    tempDiv.innerHTML = templateHtml;
 
-    // Margins and spacing
-    const leftMargin = 60;
-    const topMargin = 60;
-    const bottomMargin = 60;
-    const maxWidth = pageWidth - leftMargin * 2;
-    const lineHeight = 14; // fixed line height
-    const paragraphGap = 7; // small gap after blank line
+    // Wait for render to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Prepare lines array
-    const content = editedContent || '';
-    const rawLines = content.split('\n');
-    const lines: { text: string; isBullet: boolean }[] = [];
-
-    if (coverLetterData.subject) {
-      lines.push({ text: coverLetterData.subject, isBullet: false });
-      lines.push({ text: '', isBullet: false });
-    }
-    rawLines.forEach(raw => {
-      const txt = raw.trim();
-      lines.push({ text: txt, isBullet: txt.startsWith('•') });
+    // Convert to canvas with specific options to avoid color issues
+    const canvas = await html2canvas(tempDiv, {
+      scale: 2,
+      logging: false,
+      backgroundColor: '#ffffff',
+      allowTaint: true,
+      useCORS: true,
+      windowWidth: 794,
+      windowHeight: 1123
     });
 
-    // Draw content
-    let y = topMargin;
-    for (const line of lines) {
-      if (y > pageHeight - bottomMargin) break;
-      if (!line.text) {
-        // blank line
-        y += paragraphGap;
-        continue;
-      }
-      if (line.isBullet) {
-        pdf.setFont('helvetica', 'normal');
-        // draw bullet
-        pdf.text('•', leftMargin, y);
-        // wrap bullet text
-        const wrapped = pdf.splitTextToSize(line.text.substring(1).trim(), maxWidth - 15);
-        pdf.text(wrapped, leftMargin + 15, y);
-        y += lineHeight * wrapped.length;
-      } else {
-        pdf.setFont('helvetica', 'normal');
-        const wrapped = pdf.splitTextToSize(line.text, maxWidth);
-        pdf.text(wrapped, leftMargin, y);
-        y += lineHeight * wrapped.length;
-      }
-      // after each printed line, advance by lineHeight
-      y += 0; // already moved by wrapped.length * lineHeight
-    }
+    // Create PDF
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'px',
+      format: [794, 1123] // A4 size in pixels
+    });
 
+    pdf.addImage(imgData, 'PNG', 0, 0, 794, 1123);
     pdf.save(filename);
+
+    // Clean up
+    document.body.removeChild(tempDiv);
   } catch (error) {
-    console.error('Error exporting PDF:', error);
+    console.error('Error generating PDF:', error);
     throw error;
   }
 };
 
-/**
- * Exports cover letter to Word document with professional styling.
- */
 export const exportToWord = async (
   coverLetterData: CoverLetterData,
-  editedContent: string | null,
-  filename: string
+  editedContent: string,
+  filename: string = 'cover-letter.docx'
 ): Promise<void> => {
   try {
-    const content = editedContent || '';
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Cover Letter</title>
-        <style>
-          body { font-family: 'Calibri', Arial, sans-serif; margin: 1in; line-height: 1.2; font-size: 11pt; }
-          .content { margin-top: 1em; }
-          .bullet-list { padding-left: 1.5em; margin-bottom: 0.5em; }
-          .bullet-item { margin-bottom: 0.25em; }
-        </style>
-      </head>
-      <body>
-        ${coverLetterData.subject ? `<h2>${coverLetterData.subject}</h2>` : ''}
-        <div class="content">
-          ${formatWordDocument(content)}
-        </div>
-      </body>
-      </html>
-    `;
+    const { resumeData } = coverLetterData;
+    const templateId = coverLetterData.templateId || 'modern';
+    const paragraphs: Paragraph[] = [];
 
-    const blob = new Blob([htmlContent], { type: 'application/msword' });
+    // Apply template-specific styling
+    switch (templateId) {
+      case 'modern':
+        // Modern template - bold header with background
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: resumeData?.name || 'Your Name',
+                bold: true,
+                size: 32,
+                color: '7C3AED' // Purple color
+              })
+            ],
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 100 },
+            shading: {
+              fill: 'F3F4F6' // Light background
+            }
+          })
+        );
+        break;
+
+      case 'classic':
+        // Classic template - centered serif style
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: resumeData?.name || 'Your Name',
+                bold: true,
+                size: 32,
+                font: 'Times New Roman'
+              })
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 }
+          })
+        );
+        break;
+
+      case 'creative':
+        // Creative template - modern with accent
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: resumeData?.name || 'Your Name',
+                bold: true,
+                size: 28,
+                color: '4F46E5' // Indigo color
+              })
+            ],
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 100 },
+            border: {
+              left: {
+                color: '4F46E5',
+                space: 10,
+                value: BorderStyle.SINGLE,
+                size: 24
+              }
+            }
+          })
+        );
+        break;
+
+      case 'minimal':
+        // Minimal template - clean with underline
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: resumeData?.name || 'Your Name',
+                bold: true,
+                size: 32
+              })
+            ],
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 100 },
+            border: {
+              bottom: {
+                color: '000000',
+                space: 5,
+                value: BorderStyle.SINGLE,
+                size: 6
+              }
+            }
+          })
+        );
+        break;
+    }
+
+    // Add contact info
+    if (resumeData?.email || resumeData?.phone) {
+      const contactInfo = [resumeData.email, resumeData.phone]
+        .filter(Boolean)
+        .join(' • ');
+      
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: contactInfo,
+              size: 20,
+              color: templateId === 'minimal' ? '666666' : '000000'
+            })
+          ],
+          alignment: templateId === 'classic' ? AlignmentType.CENTER : AlignmentType.LEFT,
+          spacing: { after: 400 }
+        })
+      );
+    }
+
+    // Parse and add content paragraphs
+    const contentLines = editedContent.split('\n');
+    
+    contentLines.forEach(line => {
+      if (line.trim()) {
+        // Check if it's a bullet point
+        if (line.trim().startsWith('-') || line.trim().startsWith('•')) {
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: line.trim().substring(1).trim(),
+                  size: 24
+                })
+              ],
+              bullet: { level: 0 },
+              spacing: { after: 100 }
+            })
+          );
+        } else {
+          // Regular paragraph
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: line,
+                  size: 24,
+                  font: templateId === 'classic' ? 'Times New Roman' : 'Arial'
+                })
+              ],
+              spacing: { after: 200 },
+              alignment: templateId === 'classic' ? AlignmentType.JUSTIFIED : AlignmentType.LEFT
+            })
+          );
+        }
+      } else {
+        // Empty line for spacing
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun({ text: ' ', size: 24 })],
+            spacing: { after: 100 }
+          })
+        );
+      }
+    });
+
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: {
+            margin: {
+              top: 1440,
+              right: 1440,
+              bottom: 1440,
+              left: 1440
+            }
+          }
+        },
+        children: paragraphs
+      }]
+    });
+
+    const blob = await Packer.toBlob(doc);
     saveAs(blob, filename);
   } catch (error) {
-    console.error('Error exporting Word document:', error);
+    console.error('Error generating Word document:', error);
     throw error;
   }
 };
 
-function formatWordDocument(content: string): string {
-  const lines = content.split('\n');
-  let html = '';
-  let inList = false;
-  lines.forEach(raw => {
-    const text = raw.trim();
-    if (!text) {
-      if (inList) { html += '</ul>'; inList = false; }
-      html += '<p>&nbsp;</p>';
-    } else if (text.startsWith('•')) {
-      if (!inList) { html += '<ul class="bullet-list">'; inList = true; }
-      html += `<li class="bullet-item">${text.substring(1).trim()}</li>`;
-    } else {
-      if (inList) { html += '</ul>'; inList = false; }
-      html += `<p>${text}</p>`;
-    }
-  });
-  if (inList) html += '</ul>';
-  return html;
-}
-
-export const copyToClipboard = async (text: string): Promise<void> => {
+export const copyToClipboard = async (content: string): Promise<void> => {
   try {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(content);
   } catch (error) {
-    console.error('Error copying to clipboard:', error);
-    throw error;
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = content;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      throw new Error('Failed to copy text');
+    } finally {
+      document.body.removeChild(textArea);
+    }
   }
 };
