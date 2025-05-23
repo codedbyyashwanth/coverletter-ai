@@ -1,310 +1,321 @@
-// Fixed export utilities with proper color handling and template styling
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, BorderStyle } from 'docx';
-import { saveAs } from 'file-saver';
 import type { CoverLetterData } from '@/types/coverLetter';
-import ReactDOMServer from 'react-dom/server';
-import {
-  ModernTemplate,
-  ClassicTemplate,
-  CreativeTemplate,
-  MinimalTemplate
-} from '@/components/templates';
-import React from 'react';
 
-// Helper to get template component based on type
-const getTemplateComponent = (templateType: string) => {
-  switch (templateType) {
+// Function to render template as HTML string for export
+const renderTemplateForExport = (
+  coverLetterData: CoverLetterData,
+  templateId: string,
+  content: string
+): string => {
+  const { resumeData } = coverLetterData;
+  const userName = resumeData?.name || 'Your Name';
+  const userEmail = resumeData?.email || '';
+  const userPhone = resumeData?.phone || '';
+
+  // Generate template-specific HTML based on selected template
+  switch (templateId) {
     case 'modern':
-      return ModernTemplate;
+      return `
+        <div style="font-family: Arial, sans-serif; background-color: #ffffff; margin: 0; padding: 0; width: 100%; min-height: 100vh;">
+          <div style="background-color: #000000; padding: 24px; color: #ffffff; margin-bottom: 24px;">
+            <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 8px 0; color: #ffffff;">${userName}</h1>
+            ${userEmail ? `<p style="font-size: 14px; margin: 0 0 4px 0; color: #ffffff;">${userEmail}</p>` : ''}
+            ${userPhone ? `<p style="font-size: 14px; margin: 0 0 4px 0; color: #ffffff;">${userPhone}</p>` : ''}
+          </div>
+          <div style="padding: 24px; color: #000000; line-height: 1.6; font-size: 14px; white-space: pre-line;">
+            ${content}
+          </div>
+        </div>
+      `;
+
     case 'classic':
-      return ClassicTemplate;
+      return `
+        <div style="font-family: 'Times New Roman', serif; padding: 32px; border: 1px solid #e5e5e5; background-color: #ffffff; color: #000000;">
+          <div style="text-align: center; margin-bottom: 32px;">
+            <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 8px 0; color: #000000;">${userName}</h1>
+            <div style="display: flex; justify-content: center; gap: 16px; font-size: 14px; color: #000000;">
+              ${userEmail ? `<span>${userEmail}</span>` : ''}
+              ${userEmail && userPhone ? '<span>•</span>' : ''}
+              ${userPhone ? `<span>${userPhone}</span>` : ''}
+            </div>
+          </div>
+          <div style="line-height: 1.8; text-align: justify; color: #000000; white-space: pre-line;">
+            ${content}
+          </div>
+        </div>
+      `;
+
     case 'creative':
-      return CreativeTemplate;
+      return `
+        <div style="font-family: Arial, sans-serif; display: flex; min-height: 100%; background-color: #ffffff;">
+          <div style="width: 200px; background-color: #e0e7ff; padding: 24px; min-height: 100%;">
+            <h1 style="font-size: 20px; font-weight: bold; margin: 0 0 16px 0; color: #4f46e5;">${userName}</h1>
+            ${userEmail ? `<p style="font-size: 12px; margin: 0 0 8px 0; color: #374151;">${userEmail}</p>` : ''}
+            ${userPhone ? `<p style="font-size: 12px; margin: 0 0 8px 0; color: #374151;">${userPhone}</p>` : ''}
+          </div>
+          <div style="flex: 1; padding: 24px; color: #000000; line-height: 1.6; white-space: pre-line;">
+            ${content}
+          </div>
+        </div>
+      `;
+
     case 'minimal':
     default:
-      return MinimalTemplate;
+      return `
+        <div style="font-family: Arial, sans-serif; padding: 32px; max-width: 800px; margin: 0 auto; background-color: #ffffff; color: #000000;">
+          <div style="border-bottom: 2px solid #000000; padding-bottom: 16px; margin-bottom: 24px;">
+            <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 8px 0; color: #000000;">${userName}</h1>
+            <div style="display: flex; gap: 16px; font-size: 12px; color: #666666;">
+              ${userEmail ? `<span>${userEmail}</span>` : ''}
+              ${userEmail && userPhone ? '<span>•</span>' : ''}
+              ${userPhone ? `<span>${userPhone}</span>` : ''}
+            </div>
+          </div>
+          <div style="line-height: 1.6; font-size: 14px; color: #000000; white-space: pre-line;">
+            ${content}
+          </div>
+        </div>
+      `;
   }
 };
 
+// Export as PDF using html2pdf
 export const exportToPdf = async (
   coverLetterData: CoverLetterData,
-  editedContent: string,
-  filename: string = 'cover-letter.pdf'
+  content: string,
+  filename: string
 ): Promise<void> => {
   try {
+    // Dynamic import to avoid SSR issues
+    const html2pdf = (await import('html2pdf.js')).default;
+    
     const templateId = coverLetterData.templateId || 'modern';
-    const TemplateComponent = getTemplateComponent(templateId);
+    const htmlContent = renderTemplateForExport(coverLetterData, templateId, content);
     
-    // Create a temporary div to render the template
+    // Create a temporary div with the HTML content
     const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.top = '0';
-    tempDiv.style.width = '794px'; // A4 width in pixels at 96 DPI
-    tempDiv.style.minHeight = '1123px'; // A4 height in pixels at 96 DPI
+    tempDiv.innerHTML = htmlContent;
+    tempDiv.style.width = '8.5in';
+    tempDiv.style.minHeight = '11in';
+    tempDiv.style.margin = '0';
     tempDiv.style.backgroundColor = '#ffffff';
-    tempDiv.style.fontFamily = 'Arial, sans-serif';
-    document.body.appendChild(tempDiv);
-
-    // Render the template with export styles
-    const templateHtml = ReactDOMServer.renderToString(
-      React.createElement(TemplateComponent, {
-        coverLetterData,
-        content: editedContent,
-        isExport: true
-      })
-    );
     
-    tempDiv.innerHTML = templateHtml;
+    // Temporarily add to body for rendering
+    document.body.appendChild(tempDiv);
+    
+    const options = {
+      margin: 0.5,
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { 
+        unit: 'in', 
+        format: 'letter', 
+        orientation: 'portrait' 
+      }
+    };
 
-    // Wait for render to complete
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Convert to canvas with specific options to avoid color issues
-    const canvas = await html2canvas(tempDiv, {
-      scale: 2,
-      logging: false,
-      backgroundColor: '#ffffff',
-      allowTaint: true,
-      useCORS: true,
-      windowWidth: 794,
-      windowHeight: 1123
-    });
-
-    // Create PDF
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'px',
-      format: [794, 1123] // A4 size in pixels
-    });
-
-    pdf.addImage(imgData, 'PNG', 0, 0, 794, 1123);
-    pdf.save(filename);
-
+    await html2pdf().set(options).from(tempDiv).save();
+    
     // Clean up
     document.body.removeChild(tempDiv);
   } catch (error) {
-    console.error('Error generating PDF:', error);
-    throw error;
+    console.error('Error exporting PDF:', error);
+    throw new Error('Failed to export as PDF. Please try a different format.');
   }
 };
 
+// Export as Word document with template formatting
 export const exportToWord = async (
   coverLetterData: CoverLetterData,
-  editedContent: string,
-  filename: string = 'cover-letter.docx'
+  content: string,
+  filename: string
 ): Promise<void> => {
   try {
+    // Dynamic import to avoid SSR issues
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx');
+    
     const { resumeData } = coverLetterData;
     const templateId = coverLetterData.templateId || 'modern';
-    const paragraphs: Paragraph[] = [];
+    
+    // Parse the content into sections
+    const lines = content.split('\n').filter(line => line.trim());
+    const paragraphs: any[] = [];
+    
+    // Template-specific styling
+    const getTemplateStyles = (templateId: string) => {
+      switch (templateId) {
+        case 'modern':
+          return {
+            nameSize: 32,
+            nameColor: '000000',
+            contactSize: 22,
+            bodySize: 22,
+            headerSpacing: 400
+          };
+        case 'classic':
+          return {
+            nameSize: 28,
+            nameColor: '000000',
+            contactSize: 20,
+            bodySize: 24,
+            headerSpacing: 600
+          };
+        case 'creative':
+          return {
+            nameSize: 26,
+            nameColor: '4f46e5',
+            contactSize: 20,
+            bodySize: 22,
+            headerSpacing: 400
+          };
+        case 'minimal':
+        default:
+          return {
+            nameSize: 28,
+            nameColor: '000000',
+            contactSize: 20,
+            bodySize: 22,
+            headerSpacing: 400
+          };
+      }
+    };
 
-    // Apply template-specific styling
-    switch (templateId) {
-      case 'modern':
-        // Modern template - bold header with background
-        paragraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: resumeData?.name || 'Your Name',
-                bold: true,
-                size: 32,
-                color: '7C3AED' // Purple color
-              })
-            ],
-            alignment: AlignmentType.LEFT,
-            spacing: { after: 100 },
-            shading: {
-              fill: 'F3F4F6' // Light background
-            }
-          })
-        );
-        break;
-
-      case 'classic':
-        // Classic template - centered serif style
-        paragraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: resumeData?.name || 'Your Name',
-                bold: true,
-                size: 32,
-                font: 'Times New Roman'
-              })
-            ],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 200 }
-          })
-        );
-        break;
-
-      case 'creative':
-        // Creative template - modern with accent
-        paragraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: resumeData?.name || 'Your Name',
-                bold: true,
-                size: 28,
-                color: '4F46E5' // Indigo color
-              })
-            ],
-            alignment: AlignmentType.LEFT,
-            spacing: { after: 100 },
-            border: {
-              left: {
-                color: '4F46E5',
-                space: 10,
-                value: BorderStyle.SINGLE,
-                size: 24
-              }
-            }
-          })
-        );
-        break;
-
-      case 'minimal':
-        // Minimal template - clean with underline
-        paragraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: resumeData?.name || 'Your Name',
-                bold: true,
-                size: 32
-              })
-            ],
-            alignment: AlignmentType.LEFT,
-            spacing: { after: 100 },
-            border: {
-              bottom: {
-                color: '000000',
-                space: 5,
-                value: BorderStyle.SINGLE,
-                size: 6
-              }
-            }
-          })
-        );
-        break;
-    }
-
-    // Add contact info
-    if (resumeData?.email || resumeData?.phone) {
-      const contactInfo = [resumeData.email, resumeData.phone]
-        .filter(Boolean)
-        .join(' • ');
-      
+    const styles = getTemplateStyles(templateId);
+    
+    // Add name as header
+    if (resumeData?.name) {
       paragraphs.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: contactInfo,
-              size: 20,
-              color: templateId === 'minimal' ? '666666' : '000000'
+              text: resumeData.name,
+              bold: true,
+              size: styles.nameSize,
+              color: styles.nameColor
             })
           ],
+          heading: HeadingLevel.HEADING_1,
           alignment: templateId === 'classic' ? AlignmentType.CENTER : AlignmentType.LEFT,
-          spacing: { after: 400 }
+          spacing: { after: 200 }
         })
       );
     }
-
-    // Parse and add content paragraphs
-    const contentLines = editedContent.split('\n');
     
-    contentLines.forEach(line => {
-      if (line.trim()) {
-        // Check if it's a bullet point
-        if (line.trim().startsWith('-') || line.trim().startsWith('•')) {
-          paragraphs.push(
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: line.trim().substring(1).trim(),
-                  size: 24
-                })
-              ],
-              bullet: { level: 0 },
-              spacing: { after: 100 }
+    // Add contact info
+    const contactInfo = [];
+    if (resumeData?.email) contactInfo.push(resumeData.email);
+    if (resumeData?.phone) contactInfo.push(resumeData.phone);
+    
+    if (contactInfo.length > 0) {
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: contactInfo.join(' • '),
+              size: styles.contactSize
             })
-          );
-        } else {
-          // Regular paragraph
-          paragraphs.push(
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: line,
-                  size: 24,
-                  font: templateId === 'classic' ? 'Times New Roman' : 'Arial'
-                })
-              ],
-              spacing: { after: 200 },
-              alignment: templateId === 'classic' ? AlignmentType.JUSTIFIED : AlignmentType.LEFT
-            })
-          );
-        }
-      } else {
-        // Empty line for spacing
+          ],
+          alignment: templateId === 'classic' ? AlignmentType.CENTER : AlignmentType.LEFT,
+          spacing: { after: styles.headerSpacing }
+        })
+      );
+    }
+    
+    // Add content paragraphs
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Skip name and contact info lines that are already added
+      if (resumeData?.name && line.includes(resumeData.name)) continue;
+      if (resumeData?.email && line.includes(resumeData.email)) continue;
+      if (resumeData?.phone && line.includes(resumeData.phone)) continue;
+      
+      // Handle bullet points
+      if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
         paragraphs.push(
           new Paragraph({
-            children: [new TextRun({ text: ' ', size: 24 })],
-            spacing: { after: 100 }
+            children: [
+              new TextRun({
+                text: `• ${line.replace(/^[•\-*]\s*/, '')}`,
+                size: styles.bodySize
+              })
+            ],
+            spacing: { after: 120 }
+          })
+        );
+      } else if (line.length > 0) {
+        // Regular paragraph
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: line,
+                size: styles.bodySize
+              })
+            ],
+            spacing: { after: 240 }
           })
         );
       }
-    });
-
+    }
+    
+    // Create the document
     const doc = new Document({
       sections: [{
         properties: {
           page: {
             margin: {
-              top: 1440,
-              right: 1440,
-              bottom: 1440,
-              left: 1440
+              top: '1in',
+              right: '1in',
+              bottom: '1in',
+              left: '1in'
             }
           }
         },
         children: paragraphs
       }]
     });
-
+    
+    // Generate and download
     const blob = await Packer.toBlob(doc);
-    saveAs(blob, filename);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   } catch (error) {
-    console.error('Error generating Word document:', error);
-    throw error;
+    console.error('Error exporting Word:', error);
+    throw new Error('Failed to export as Word document.');
   }
 };
 
+// Copy to clipboard
 export const copyToClipboard = async (content: string): Promise<void> => {
   try {
-    await navigator.clipboard.writeText(content);
-  } catch (error) {
-    // Fallback for older browsers
-    const textArea = document.createElement('textarea');
-    textArea.value = content;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(content);
+    } else {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = content;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
       document.execCommand('copy');
-    } catch (err) {
-      throw new Error('Failed to copy text');
-    } finally {
-      document.body.removeChild(textArea);
+      textArea.remove();
     }
+  } catch (error) {
+    console.error('Error copying to clipboard:', error);
+    throw new Error('Failed to copy to clipboard.');
   }
 };
