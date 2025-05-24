@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const MinimalistRealContentPDF = ({ resumeData = {} }) => {
+const MinimalistTemplate = ({ resumeData = {} }) => {
   const name = resumeData?.name || 'Yashwanth M Y';
   const email = resumeData?.email || 'yashmy01@gmail.com';
   const phone = resumeData?.phone || '+91 9945998492';
@@ -155,4 +155,4 @@ const MinimalistRealContentPDF = ({ resumeData = {} }) => {
   );
 };
 
-export default MinimalistRealContentPDF;
+export default MinimalistTemplate;
