@@ -1,4 +1,3 @@
-// src/utils/exportUtils.ts
 import { pdf, Document, Page } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 import React from 'react';

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectCurrentResume } from '@/store/slices/resumeSlice';
@@ -27,6 +27,7 @@ const CoverLetterPage: React.FC = () => {
   const selectedTemplateId = useSelector(selectSelectedTemplateId);
   const { generateLetter, isLoading, error } = useCoverLetterGenerator();
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [isChangingTemplate, setIsChangingTemplate] = useState(false);
 
   // Redirect if no resume or job data
   useEffect(() => {
@@ -53,9 +54,23 @@ const CoverLetterPage: React.FC = () => {
     generateInitialLetter();
   }, [resumeData, jobData, currentCoverLetter, selectedTemplateId, isLoading, generateLetter]);
 
-  const handleTemplateChange = (templateId: string) => {
-    dispatch(setSelectedTemplate(templateId));
-  };
+  // Handle template change with debounce to avoid PDF rendering errors
+  const handleTemplateChange = useCallback((templateId: string) => {
+    // Only proceed if it's a new template
+    if (templateId !== selectedTemplateId) {
+      setIsChangingTemplate(true);
+      
+      // Use setTimeout to allow DOM to update before changing template
+      setTimeout(() => {
+        dispatch(setSelectedTemplate(templateId));
+        
+        // Use another setTimeout to allow the template to update before showing it again
+        setTimeout(() => {
+          setIsChangingTemplate(false);
+        }, 300);
+      }, 50);
+    }
+  }, [dispatch, selectedTemplateId]);
 
   const handleRegenerateLetter = async () => {
     if (resumeData && jobData) {
@@ -77,7 +92,7 @@ const CoverLetterPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 px-6  w-10/12 max-w-none">
+    <div className="container mx-auto py-8 px-6 w-10/12 max-w-none">
       <h1 className="text-3xl font-bold mb-8 text-center">Your Cover Letter</h1>
       
       {(error || generationError) && (
@@ -119,17 +134,21 @@ const CoverLetterPage: React.FC = () => {
             onSelect={handleTemplateChange}
           />
           
-          <CoverLetterEditor 
-            
-          />
+          <CoverLetterEditor />
         </div>
         
         <div>
-          <CoverLetterPreview 
-            coverLetterData={currentCoverLetter as CoverLetterData}
-            templateId={selectedTemplateId || 'modern'}
-            isLoading={isLoading}
-          />
+          {isChangingTemplate ? (
+            <div className="h-[800px] flex items-center justify-center bg-gray-50 rounded-lg border shadow-md">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <CoverLetterPreview 
+              coverLetterData={currentCoverLetter as CoverLetterData}
+              templateId={selectedTemplateId || 'modern'}
+              isLoading={isLoading}
+            />
+          )}
           
           <ExportOptions />
         </div>

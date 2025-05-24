@@ -1,15 +1,18 @@
-// src/components/CoverLetterPreview.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import type { CoverLetterData } from '@/types/coverLetter';
-import { PDFViewer } from '@react-pdf/renderer';
-import {
-  MonogramTemplate,
-  DotAccentTemplate,
-  BoldHeaderTemplate,
-  MinimalistTemplate,
-  AccentBorderTemplate,
-} from '@/components/templates';
+import { useSelector } from 'react-redux';
+import { selectEditedContent } from '@/store/slices/coverLetterSlice';
+import { Document, Page } from '@react-pdf/renderer';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+// Import all templates
+import MonogramTemplate from './templates/MonogramTemplate';
+import DotAccentTemplate from './templates/DotAccentTemplate';
+import BoldHeaderTemplate from './templates/BoldHeaderTemplate';
+import MinimalistTemplate from './templates/MinimalistTemplate';
+import AccentBorderTemplate from './templates/AccentBorderTemplate';
 
 interface CoverLetterPreviewProps {
   coverLetterData: CoverLetterData;
@@ -22,6 +25,18 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
   templateId,
   isLoading = false,
 }) => {
+  const [renderError, setRenderError] = useState<string | null>(null);
+  const [key, setKey] = useState<number>(0); // Add a key for forced re-rendering
+  
+  // Get the edited content from Redux store if available
+  const editedContent = useSelector(selectEditedContent);
+  
+  // Reset error state and force re-render when template changes
+  useEffect(() => {
+    setRenderError(null);
+    setKey(prev => prev + 1); // Force re-render on template change
+  }, [templateId]);
+
   if (isLoading) {
     return (
       <Card className="p-6 shadow-md h-[800px] flex items-center justify-center">
@@ -41,39 +56,73 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
     );
   }
 
+  if (renderError) {
+    return (
+      <Card className="p-6 shadow-md h-[800px]">
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4 mr-2" />
+          <AlertDescription>
+            Error rendering PDF preview: {renderError}
+          </AlertDescription>
+        </Alert>
+        <div className="p-4 border rounded-md h-[700px] overflow-auto">
+          <h3 className="text-lg font-bold mb-4">Cover Letter Content:</h3>
+          <pre className="whitespace-pre-wrap font-mono text-sm">
+            {editedContent || coverLetterData.content || 'No content available'}
+          </pre>
+        </div>
+      </Card>
+    );
+  }
+
+  // Use edited content if available, otherwise use the original content
+  const contentToRender = editedContent || coverLetterData.content || '';
   const resumeData = coverLetterData.resumeData || {};
 
-  // Render the appropriate template as a <Document />
+  // Render the appropriate template
   const renderTemplate = () => {
-    switch (templateId) {
-      case 'modern':
-        return <AccentBorderTemplate resumeData={resumeData} />;
-      case 'classic':
-        return <BoldHeaderTemplate resumeData={resumeData} />;
-      case 'creative':
-        return <DotAccentTemplate resumeData={resumeData} />;
-      case 'monogram':
-        return <MonogramTemplate resumeData={resumeData} />;
-      default:
-        return <MinimalistTemplate resumeData={resumeData} />;
+    try {
+      switch (templateId) {
+        case 'modern':
+          return <AccentBorderTemplate resumeData={resumeData} content={contentToRender} />;
+        case 'classic':
+          return <BoldHeaderTemplate resumeData={resumeData} content={contentToRender} />;
+        case 'creative':
+          return <DotAccentTemplate resumeData={resumeData} content={contentToRender} />;
+        case 'monogram':
+          return <MonogramTemplate resumeData={resumeData} content={contentToRender} />;
+        case 'minimal':
+        default:
+          return <MinimalistTemplate resumeData={resumeData} content={contentToRender} />;
+      }
+    } catch (error) {
+      console.error("Error rendering template:", error);
+      setRenderError(error instanceof Error ? error.message : 'Unknown error');
+      return null;
     }
   };
+
+  // Use a dynamic import for the PDFViewer to prevent rendering issues
+  const PDFPreview = React.lazy(() => import('./PDFPreview'));
 
   return (
     <Card className="p-6 shadow-md h-[800px]">
       <div className="h-full">
-        <PDFViewer
-          style={{
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            borderRadius: '8px'
-          }}
-          showToolbar={false}
+        <React.Suspense 
+          fallback={
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          }
         >
-          {/* Ensure renderTemplate returns a <Document /> */}
-          {renderTemplate()}
-        </PDFViewer>
+          <PDFPreview key={key}>
+            <Document>
+              <Page size="A4">
+                {renderTemplate()}
+              </Page>
+            </Document>
+          </PDFPreview>
+        </React.Suspense>
       </div>
     </Card>
   );

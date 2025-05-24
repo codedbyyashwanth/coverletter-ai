@@ -8,7 +8,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Copy, FileText } from 'lucide-react';
+import { Copy, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const CoverLetterEditor: React.FC = () => {
   const dispatch = useDispatch();
@@ -89,27 +90,22 @@ ${userName}`;
   const handleCopy = () => {
     navigator.clipboard.writeText(localContent);
     setIsCopied(true);
+    toast.success('Cover letter copied to clipboard');
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const addBulletPoints = () => {
-    // Insert bullet points at cursor position or at the end
-    const textarea = document.querySelector('textarea');
-    const cursorPos = textarea?.selectionStart || localContent.length;
-    
-    const bulletTemplate = `
-- First accomplishment or skill
-- Second accomplishment or skill
-- Third accomplishment or skill
-`;
-
-    const newContent = 
-      localContent.substring(0, cursorPos) + 
-      bulletTemplate + 
-      localContent.substring(cursorPos);
-    
-    setLocalContent(newContent);
-    dispatch(updateEditedContent(newContent));
+  const handleFormatText = () => {
+    try {
+      // Simple formatting - make sure paragraphs are separated by double newlines
+      const paragraphs = localContent.split(/\n+/).filter(p => p.trim() !== '');
+      const formattedContent = paragraphs.join('\n\n');
+      
+      setLocalContent(formattedContent);
+      dispatch(updateEditedContent(formattedContent));
+      toast.success('Text formatting applied');
+    } catch (error) {
+      toast.error('Error formatting text');
+    }
   };
 
   if (!currentCoverLetter) {
@@ -121,6 +117,15 @@ ${userName}`;
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-semibold">Edit Your Cover Letter</h2>
         <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleFormatText}
+            className="flex items-center"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Format Text
+          </Button>
           <Button 
             variant="outline" 
             size="sm" 
@@ -142,7 +147,7 @@ ${userName}`;
       <p className="mt-3 text-sm text-gray-500">
         <strong>Tip:</strong> Format your cover letter as shown in the template above. 
         Include your contact details at the top, company details, 
-        and use bullet points (•) for listing accomplishments.
+        and use bullet points (•) for listing accomplishments if needed.
       </p>
     </Card>
   );

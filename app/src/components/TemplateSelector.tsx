@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { useSelector } from 'react-redux';
 import { selectTemplates } from '@/store/slices/coverLetterSlice';
@@ -15,6 +15,14 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 }) => {
   const templates = useSelector(selectTemplates);
   
+  // Use useCallback to prevent unnecessary re-renders
+  const handleTemplateSelect = useCallback((templateId: string) => {
+    // Only trigger selection if it's actually changing
+    if (templateId !== selectedTemplateId) {
+      onSelect(templateId);
+    }
+  }, [selectedTemplateId, onSelect]);
+  
   return (
     <Card className="p-6 shadow-md mb-6">
       <h2 className="text-xl font-semibold mb-4">Choose a Template</h2>
@@ -24,7 +32,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
             key={template.id}
             template={template}
             isSelected={template.id === selectedTemplateId}
-            onSelect={() => onSelect(template.id)}
+            onSelect={() => handleTemplateSelect(template.id)}
           />
         ))}
       </div>
@@ -38,7 +46,8 @@ interface TemplateCardProps {
   onSelect: () => void;
 }
 
-const TemplateCard: React.FC<TemplateCardProps> = ({
+// Memoize the TemplateCard component to prevent unnecessary re-renders
+const TemplateCard: React.FC<TemplateCardProps> = React.memo(({
   template,
   isSelected,
   onSelect,
@@ -51,6 +60,15 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           : 'hover:shadow-md'
       }`}
       onClick={onSelect}
+      role="button"
+      aria-pressed={isSelected}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onSelect();
+          e.preventDefault();
+        }
+      }}
     >
       <div className="aspect-[3/4] relative bg-gray-100">
         {/* Use template preview image if available, otherwise use a colored div */}
@@ -59,6 +77,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             src={template.previewUrl}
             alt={template.name}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         ) : (
           <div className={`w-full h-full flex items-center justify-center ${getTemplateColor(template.type)}`}>
@@ -71,7 +90,9 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
       </div>
     </div>
   );
-};
+});
+
+TemplateCard.displayName = 'TemplateCard';
 
 // Helper function to get background color for template preview
 const getTemplateColor = (templateType: string): string => {
@@ -82,6 +103,8 @@ const getTemplateColor = (templateType: string): string => {
       return 'bg-gradient-to-r from-gray-700 to-gray-900';
     case 'creative':
       return 'bg-gradient-to-r from-blue-500 to-teal-400';
+    case 'monogram':
+      return 'bg-gradient-to-r from-indigo-500 to-purple-600';
     case 'minimal':
     default:
       return 'bg-gradient-to-r from-gray-400 to-gray-600';

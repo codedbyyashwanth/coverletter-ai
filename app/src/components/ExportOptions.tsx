@@ -1,4 +1,3 @@
-// src/components/ExportOptions.tsx
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,15 @@ import {
 } from '@/store/slices/coverLetterSlice';
 import { Download, Copy, FileText, Loader } from 'lucide-react';
 import { toast } from 'sonner';
-import { exportToPdf, exportToWord, copyToClipboard } from '@/utils/exportUtils';
+import { pdf, Document, Page } from '@react-pdf/renderer';
+import { saveAs } from 'file-saver';
+
+// Import templates
+import MonogramTemplate from './templates/MonogramTemplate';
+import DotAccentTemplate from './templates/DotAccentTemplate';
+import BoldHeaderTemplate from './templates/BoldHeaderTemplate';
+import MinimalistTemplate from './templates/MinimalistTemplate';
+import AccentBorderTemplate from './templates/AccentBorderTemplate';
 
 export const ExportOptions: React.FC = () => {
   const currentCoverLetter = useSelector(selectCurrentCoverLetter);
@@ -27,13 +34,54 @@ export const ExportOptions: React.FC = () => {
   const handleExportPDF = async () => {
     setIsExportingPdf(true);
     try {
-      await exportToPdf(
-        currentCoverLetter, 
-        editedContent,
-        'cover-letter.pdf',
-        selectedTemplateId || 'minimal'
-      );
-      toast.success('Cover letter exported as PDF');
+      // Get template component based on selected template
+      const content = editedContent || '';
+      const resumeData = currentCoverLetter.resumeData || {};
+      
+      let TemplateComponent;
+      switch (selectedTemplateId) {
+        case 'modern':
+          TemplateComponent = <AccentBorderTemplate resumeData={resumeData} content={content} />;
+          break;
+        case 'classic':
+          TemplateComponent = <BoldHeaderTemplate resumeData={resumeData} content={content} />;
+          break;
+        case 'creative':
+          TemplateComponent = <DotAccentTemplate resumeData={resumeData} content={content} />;
+          break;
+        case 'monogram':
+          TemplateComponent = <MonogramTemplate resumeData={resumeData} content={content} />;
+          break;
+        case 'minimal':
+        default:
+          TemplateComponent = <MinimalistTemplate resumeData={resumeData} content={content} />;
+          break;
+      }
+      
+      try {
+        // Create PDF document
+        const doc = (
+          <Document>
+            <Page size="A4">
+              {TemplateComponent}
+            </Page>
+          </Document>
+        );
+        
+        // Generate PDF blob
+        const blob = await pdf(doc).toBlob();
+        
+        // Save file
+        saveAs(blob, 'cover-letter.pdf');
+        toast.success('Cover letter exported as PDF');
+      } catch (pdfError) {
+        console.error('PDF generation error:', pdfError);
+        
+        // Fallback to text export if PDF generation fails
+        const blob = new Blob([editedContent], { type: 'text/plain' });
+        saveAs(blob, 'cover-letter.txt');
+        toast.success('Cover letter exported as text (PDF generation failed)');
+      }
     } catch (error) {
       console.error('Error exporting PDF:', error);
       toast.error('Failed to export as PDF');
@@ -45,11 +93,9 @@ export const ExportOptions: React.FC = () => {
   const handleExportWord = async () => {
     setIsExportingWord(true);
     try {
-      await exportToWord(
-        currentCoverLetter, 
-        editedContent,
-        'cover-letter.docx'
-      );
+      // Create a blob with the text content
+      const blob = new Blob([editedContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      saveAs(blob, 'cover-letter.docx');
       toast.success('Cover letter exported as Word document');
     } catch (error) {
       console.error('Error exporting Word:', error);
@@ -61,7 +107,7 @@ export const ExportOptions: React.FC = () => {
 
   const handleCopyToClipboard = async () => {
     try {
-      await copyToClipboard(editedContent);
+      await navigator.clipboard.writeText(editedContent);
       setIsCopied(true);
       toast.success('Cover letter copied to clipboard');
       setTimeout(() => setIsCopied(false), 2000);
@@ -128,3 +174,5 @@ export const ExportOptions: React.FC = () => {
     </Card>
   );
 };
+
+export default ExportOptions;
