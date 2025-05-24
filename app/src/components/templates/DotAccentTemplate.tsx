@@ -184,7 +184,6 @@ const DotAccentTemplate = ({ resumeData = {} }) => {
   const phone = resumeData?.phone || '+91 9945998492';
 
   return (
-    <PDFViewer style={{ width: '100%', height: '800px' }}>
       <Document>
         <Page size="A4" style={styles.page}>
           {/* Decorative Dots - Top Right */}
@@ -285,7 +284,6 @@ const DotAccentTemplate = ({ resumeData = {} }) => {
           </View>
         </Page>
       </Document>
-    </PDFViewer>
   );
 };
 

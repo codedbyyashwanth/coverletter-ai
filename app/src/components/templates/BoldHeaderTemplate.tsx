@@ -108,7 +108,6 @@ const BoldHeaderTemplate = ({ resumeData = {} }) => {
   const phone = resumeData?.phone || '+91 9945998492';
 
   return (
-    <PDFViewer style={{ width: '100%', height: '800px' }}>
       <Document>
         <Page size="A4" style={styles.page}>
           {/* Bold Header */}
@@ -172,7 +171,6 @@ const BoldHeaderTemplate = ({ resumeData = {} }) => {
           </View>
         </Page>
       </Document>
-    </PDFViewer>
   );
 };
 

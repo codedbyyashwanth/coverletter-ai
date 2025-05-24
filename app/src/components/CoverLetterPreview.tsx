@@ -1,17 +1,14 @@
-// Updated to use the new template components
+// src/components/CoverLetterPreview.tsx
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import type { CoverLetterData } from '@/types/coverLetter';
-import { useSelector } from 'react-redux';
-import { 
-  selectTemplates, 
-  selectEditedContent 
-} from '@/store/slices/coverLetterSlice';
+import { PDFViewer } from '@react-pdf/renderer';
 import {
-  ModernTemplate,
-  ClassicTemplate,
-  CreativeTemplate,
-  MinimalTemplate
+  MonogramTemplate,
+  DotAccentTemplate,
+  BoldHeaderTemplate,
+  MinimalistTemplate,
+  AccentBorderTemplate,
 } from '@/components/templates';
 
 interface CoverLetterPreviewProps {
@@ -25,10 +22,6 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
   templateId,
   isLoading = false,
 }) => {
-  const templates = useSelector(selectTemplates);
-  const editedContent = useSelector(selectEditedContent);
-  const template = templates.find(t => t.id === templateId) || templates[0];
-  
   if (isLoading) {
     return (
       <Card className="p-6 shadow-md h-[800px] flex items-center justify-center">
@@ -48,40 +41,42 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
     );
   }
 
-  // Use edited content or original content
-  const displayContent = editedContent || coverLetterData.content;
-  
+  const resumeData = coverLetterData.resumeData || {};
+
+  // Render the appropriate template as a <Document />
+  const renderTemplate = () => {
+    switch (templateId) {
+      case 'modern':
+        return <AccentBorderTemplate resumeData={resumeData} />;
+      case 'classic':
+        return <BoldHeaderTemplate resumeData={resumeData} />;
+      case 'creative':
+        return <DotAccentTemplate resumeData={resumeData} />;
+      case 'monogram':
+        return <MonogramTemplate resumeData={resumeData} />;
+      default:
+        return <MinimalistTemplate resumeData={resumeData} />;
+    }
+  };
+
   return (
-    <Card className="p-6 shadow-md max-h-[800px] overflow-auto">
-      <div 
-        id="cover-letter-preview" 
-        data-preview-id="cover-letter-preview" 
-        className={`cover-letter-preview ${template.type}`}
-      >
-        {renderTemplate(coverLetterData, template.type, displayContent)}
+    <Card className="p-6 shadow-md h-[800px]">
+      <div className="h-full">
+        <PDFViewer
+          style={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            borderRadius: '8px'
+          }}
+          showToolbar={false}
+        >
+          {/* Ensure renderTemplate returns a <Document /> */}
+          {renderTemplate()}
+        </PDFViewer>
       </div>
     </Card>
   );
-};
-
-const renderTemplate = (
-  coverLetterData: CoverLetterData, 
-  templateType: string, 
-  content: string
-) => {
-  const props = { coverLetterData, content, isExport: false };
-
-  switch (templateType) {
-    case 'modern':
-      return <ModernTemplate {...props} />;
-    case 'classic':
-      return <ClassicTemplate {...props} />;
-    case 'creative':
-      return <CreativeTemplate {...props} />;
-    case 'minimal':
-    default:
-      return <MinimalTemplate {...props} />;
-  }
 };
 
 export default CoverLetterPreview;

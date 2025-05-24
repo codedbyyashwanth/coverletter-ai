@@ -10,7 +10,7 @@ export interface CoverLetterData {
     lastEdited?: Date;
 }
 
-export type TemplateType = 'modern' | 'classic' | 'creative' | 'minimal';
+export type TemplateType = 'modern' | 'classic' | 'creative' | 'minimal' | 'monogram';
 
 export interface Template {
     id: string;

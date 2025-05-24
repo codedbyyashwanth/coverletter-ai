@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const MonogramTemplate.tsx = ({ resumeData = {} }) => {
+const MonogramTemplate = ({ resumeData = {} }) => {
   const name = resumeData?.name || 'Yashwanth M Y';
   const email = resumeData?.email || 'yashmy01@gmail.com';
   const phone = resumeData?.phone || '+91 9945998492';
@@ -198,7 +198,6 @@ const MonogramTemplate.tsx = ({ resumeData = {} }) => {
   };
 
   return (
-    <PDFViewer style={{ width: '100%', height: '800px' }}>
       <Document>
         <Page size="A4" style={styles.page}>
           {/* Left Sidebar with Monogram */}
@@ -321,8 +320,7 @@ const MonogramTemplate.tsx = ({ resumeData = {} }) => {
           </View>
         </Page>
       </Document>
-    </PDFViewer>
   );
 };
 
-export default MonogramTemplate.tsx;
+export default MonogramTemplate;

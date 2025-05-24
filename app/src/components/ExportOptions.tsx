@@ -1,10 +1,12 @@
+// src/components/ExportOptions.tsx
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSelector } from 'react-redux';
 import { 
   selectCurrentCoverLetter, 
-  selectEditedContent
+  selectEditedContent,
+  selectSelectedTemplateId
 } from '@/store/slices/coverLetterSlice';
 import { Download, Copy, FileText, Loader } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,36 +15,34 @@ import { exportToPdf, exportToWord, copyToClipboard } from '@/utils/exportUtils'
 export const ExportOptions: React.FC = () => {
   const currentCoverLetter = useSelector(selectCurrentCoverLetter);
   const editedContent = useSelector(selectEditedContent);
+  const selectedTemplateId = useSelector(selectSelectedTemplateId);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isExportingWord, setIsExportingWord] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
-  if (!currentCoverLetter) {
+  if (!currentCoverLetter || !editedContent) {
     return null;
   }
 
   const handleExportPDF = async () => {
-    if (!currentCoverLetter || !editedContent) return;
-    
     setIsExportingPdf(true);
     try {
       await exportToPdf(
         currentCoverLetter, 
         editedContent,
-        'cover-letter.pdf'
+        'cover-letter.pdf',
+        selectedTemplateId || 'minimal'
       );
       toast.success('Cover letter exported as PDF');
     } catch (error) {
       console.error('Error exporting PDF:', error);
-      toast.error('Failed to export as PDF. Try exporting as Word instead.');
+      toast.error('Failed to export as PDF');
     } finally {
       setIsExportingPdf(false);
     }
   };
 
   const handleExportWord = async () => {
-    if (!currentCoverLetter || !editedContent) return;
-    
     setIsExportingWord(true);
     try {
       await exportToWord(
@@ -60,8 +60,6 @@ export const ExportOptions: React.FC = () => {
   };
 
   const handleCopyToClipboard = async () => {
-    if (!editedContent) return;
-    
     try {
       await copyToClipboard(editedContent);
       setIsCopied(true);
@@ -79,7 +77,7 @@ export const ExportOptions: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Button
           onClick={handleExportPDF}
-          disabled={isExportingPdf || !editedContent}
+          disabled={isExportingPdf}
           className="flex items-center justify-center"
         >
           {isExportingPdf ? (
@@ -97,7 +95,7 @@ export const ExportOptions: React.FC = () => {
         
         <Button
           onClick={handleExportWord}
-          disabled={isExportingWord || !editedContent}
+          disabled={isExportingWord}
           variant="outline"
           className="flex items-center justify-center"
         >
@@ -116,7 +114,6 @@ export const ExportOptions: React.FC = () => {
         
         <Button
           onClick={handleCopyToClipboard}
-          disabled={!editedContent}
           variant="outline"
           className="flex items-center justify-center"
         >
@@ -126,8 +123,7 @@ export const ExportOptions: React.FC = () => {
       </div>
       
       <p className="mt-6 text-sm text-gray-600">
-        Tip: Your exported document will maintain professional formatting including contact positioning, 
-        bullet points, and proper spacing between sections.
+        Your exported document will use the selected template with professional formatting.
       </p>
     </Card>
   );
