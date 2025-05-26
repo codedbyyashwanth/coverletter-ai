@@ -24,8 +24,8 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   }, [selectedTemplateId, onSelect]);
   
   return (
-    <Card className="pt-8 px-6 pb-6 shadow-md mb-6">
-      <h2 className="text-lg font-semibold mb-6">Choose a Template</h2>
+    <Card className="pt-5 px-6 pb-3 shadow-md mb-6 gap-0">
+      <h2 className="text-lg font-semibold">Choose a Template</h2>
       <div className="overflow-x-auto px-2">
         <div className="flex gap-6 pb-4 min-w-max px-2">
           {templates.map((template) => (
