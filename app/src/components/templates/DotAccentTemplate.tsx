@@ -34,25 +34,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: '#F59E0B',
     borderBottomStyle: 'solid',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 15,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerRight: {
-    alignItems: 'flex-end',
-    maxWidth: '40%',
+    paddingRight: 120, // Add padding to avoid decorative dots
   },
   name: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1F2937',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   title: {
     fontSize: 16,
@@ -60,11 +48,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 1,
+    marginBottom: 8,
   },
   contactInfo: {
     fontSize: 11,
     color: '#6B7280',
-    textAlign: 'right',
     lineHeight: 1.5,
   },
   contactItem: {
@@ -109,15 +97,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#374151',
     marginTop: 20,
+    paddingBottom: 80, // Add padding to avoid bottom decorative dots
   },
   bottomDecorative: {
     position: 'absolute',
-    bottom: 30,
-    left: 30,
+    bottom: 20,
+    right: 30, // Moved to right side instead of left
     flexDirection: 'row',
     flexWrap: 'wrap',
-    width: 80,
-    height: 60,
+    width: 60,  // Made smaller
+    height: 40, // Made smaller
   },
 });
 
@@ -151,7 +140,7 @@ const DotAccentTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} })
 
   // Create array for decorative dots
   const dotsArray = Array.from({ length: 25 }, (_, i) => i);
-  const bottomDotsArray = Array.from({ length: 20 }, (_, i) => i);
+  const bottomDotsArray = Array.from({ length: 12 }, (_, i) => i); // Reduced number of dots
 
   return (
     <View style={styles.container}>
@@ -164,17 +153,11 @@ const DotAccentTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} })
       
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.name}>{name}</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <View style={styles.contactInfo}>
-              <Text style={styles.contactItem}>{email}</Text>
-              <Text style={styles.contactItem}>{phone}</Text>
-              {address && <Text style={styles.contactItem}>{address}</Text>}
-            </View>
-          </View>
+        <Text style={styles.name}>{name}</Text>
+        <View style={styles.contactInfo}>
+          <Text style={styles.contactItem}>{email}</Text>
+          <Text style={styles.contactItem}>{phone}</Text>
+          {address && <Text style={styles.contactItem}>{address}</Text>}
         </View>
       </View>
       
@@ -212,7 +195,7 @@ const DotAccentTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} })
         {signature},{'\n\n'}{name}
       </Text>
       
-      {/* Decorative Dots - Bottom Left */}
+      {/* Decorative Dots - Bottom Right */}
       <View style={styles.bottomDecorative}>
         {bottomDotsArray.map((i) => (
           <View key={i} style={styles.dot}></View>

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
 import type { CoverLetterData } from '@/types/coverLetter';
 import { useSelector } from 'react-redux';
 import { selectCoverLetterFields } from '@/store/slices/coverLetterSlice';
@@ -39,33 +38,33 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
 
   if (isLoading) {
     return (
-      <Card className="p-6 shadow-md h-[800px] flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-gray-600">Generating your cover letter...</p>
         </div>
-      </Card>
+      </div>
     );
   }
   
   if (!coverLetterData || !currentFields) {
     return (
-      <Card className="p-6 shadow-md h-[800px] flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <p className="text-gray-500">No cover letter generated yet</p>
-      </Card>
+      </div>
     );
   }
 
   if (renderError) {
     return (
-      <Card className="p-6 shadow-md h-[800px]">
+      <div className="h-full p-4">
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4 mr-2" />
           <AlertDescription>
             Error rendering PDF preview: {renderError}
           </AlertDescription>
         </Alert>
-        <div className="p-4 border rounded-md h-[700px] overflow-auto">
+        <div className="p-4 border h-full overflow-auto">
           <h3 className="text-lg font-bold mb-4">Cover Letter Preview:</h3>
           <div className="space-y-4 text-sm">
             <div><strong>Name:</strong> {currentFields.name}</div>
@@ -75,15 +74,11 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
             <div><strong>Position:</strong> {currentFields.position}</div>
             <div><strong>Date:</strong> {currentFields.date}</div>
             <div><strong>Greeting:</strong> {currentFields.greeting}</div>
-            <div><strong>Opening:</strong> {currentFields.openingParagraph}</div>
-            {currentFields.bodyParagraphs.map((para, index) => (
-              <div key={index}><strong>Body {index + 1}:</strong> {para}</div>
-            ))}
-            <div><strong>Closing:</strong> {currentFields.closingParagraph}</div>
+            <div><strong>Content:</strong> {currentFields.content}</div>
             <div><strong>Signature:</strong> {currentFields.signature}</div>
           </div>
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -122,25 +117,23 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
   const PDFPreview = React.lazy(() => import('./PDFPreview'));
 
   return (
-    <Card className="p-6 shadow-md h-[800px]">
-      <div className="h-full">
-        <React.Suspense 
-          fallback={
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-          }
-        >
-          <PDFPreview key={key}>
-            <Document>
-              <Page size="A4">
-                {renderTemplate()}
-              </Page>
-            </Document>
-          </PDFPreview>
-        </React.Suspense>
-      </div>
-    </Card>
+    <div className="h-full w-full">
+      <React.Suspense 
+        fallback={
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        }
+      >
+        <PDFPreview key={key}>
+          <Document>
+            <Page size="A4">
+              {renderTemplate()}
+            </Page>
+          </Document>
+        </PDFPreview>
+      </React.Suspense>
+    </div>
   );
 };
 

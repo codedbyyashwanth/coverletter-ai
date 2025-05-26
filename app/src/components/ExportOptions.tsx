@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSelector } from 'react-redux';
 import { 
@@ -7,7 +6,7 @@ import {
   selectCoverLetterFields,
   selectSelectedTemplateId
 } from '@/store/slices/coverLetterSlice';
-import { Download, Copy, FileText, Loader } from 'lucide-react';
+import { Download, Copy, Loader } from 'lucide-react';
 import { toast } from 'sonner';
 import { pdf, Document, Page } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
@@ -25,7 +24,6 @@ export const ExportOptions: React.FC = () => {
   const fields = useSelector(selectCoverLetterFields);
   const selectedTemplateId = useSelector(selectSelectedTemplateId);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [isExportingWord, setIsExportingWord] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
   if (!currentCoverLetter || !fields) {
@@ -130,29 +128,6 @@ export const ExportOptions: React.FC = () => {
     }
   };
 
-  const handleExportWord = async () => {
-    setIsExportingWord(true);
-    try {
-      const textContent = generateFullTextContent(fields);
-      const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
-\\f0\\fs24 ${textContent.replace(/\n/g, '\\par ')}}`;
-      
-      const blob = new Blob([rtfContent], { type: 'application/rtf' });
-      const fileName = `${fields.name.replace(/\s+/g, '_')}_Cover_Letter.rtf`;
-      saveAs(blob, fileName);
-      toast.success('Cover letter exported as RTF document (opens in Word)');
-    } catch (error) {
-      console.error('Error exporting Word:', error);
-      const textContent = generateFullTextContent(fields);
-      const blob = new Blob([textContent], { type: 'text/plain' });
-      const fileName = `${fields.name.replace(/\s+/g, '_')}_Cover_Letter.txt`;
-      saveAs(blob, fileName);
-      toast.success('Cover letter exported as text file');
-    } finally {
-      setIsExportingWord(false);
-    }
-  };
-
   const handleCopyToClipboard = async () => {
     try {
       const textContent = generateFullTextContent(fields);
@@ -167,65 +142,34 @@ export const ExportOptions: React.FC = () => {
   };
 
   return (
-    <Card className="p-6 shadow-md mt-6">
-      <h2 className="text-xl font-semibold mb-4">Export Options</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Button
-          onClick={handleExportPDF}
-          disabled={isExportingPdf}
-          className="flex items-center justify-center"
-        >
-          {isExportingPdf ? (
-            <>
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
-              Exporting...
-            </>
-          ) : (
-            <>
-              <Download className="mr-2 h-4 w-4" />
-              Export as PDF
-            </>
-          )}
-        </Button>
-        
-        <Button
-          onClick={handleExportWord}
-          disabled={isExportingWord}
-          variant="outline"
-          className="flex items-center justify-center"
-        >
-          {isExportingWord ? (
-            <>
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
-              Exporting...
-            </>
-          ) : (
-            <>
-              <FileText className="mr-2 h-4 w-4" />
-              Export as RTF
-            </>
-          )}
-        </Button>
-        
-        <Button
-          onClick={handleCopyToClipboard}
-          variant="outline"
-          className="flex items-center justify-center"
-        >
-          <Copy className="mr-2 h-4 w-4" />
-          {isCopied ? 'Copied!' : 'Copy to Clipboard'}
-        </Button>
-      </div>
+    <div className="flex gap-3 mb-4">
+      <Button
+        onClick={handleExportPDF}
+        disabled={isExportingPdf}
+        className="flex items-center"
+      >
+        {isExportingPdf ? (
+          <>
+            <Loader className="mr-2 h-4 w-4 animate-spin" />
+            Exporting...
+          </>
+        ) : (
+          <>
+            <Download className="mr-2 h-4 w-4" />
+            Export PDF
+          </>
+        )}
+      </Button>
       
-      <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <h3 className="text-sm font-medium mb-2">Export Details:</h3>
-        <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-          <li>• <strong>PDF:</strong> Professional formatted document using your selected template</li>
-          <li>• <strong>RTF:</strong> Rich text format that opens in Microsoft Word</li>
-          <li>• <strong>Copy:</strong> Plain text version for pasting into applications</li>
-        </ul>
-      </div>
-    </Card>
+      <Button
+        onClick={handleCopyToClipboard}
+        variant="outline"
+        className="flex items-center"
+      >
+        <Copy className="mr-2 h-4 w-4" />
+        {isCopied ? 'Copied!' : 'Copy Text'}
+      </Button>
+    </div>
   );
 };
 

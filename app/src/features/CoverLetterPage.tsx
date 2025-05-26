@@ -184,7 +184,7 @@ const CoverLetterPage: React.FC = () => {
         </Alert>
       )}
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
           <div className="mb-6 flex space-x-4">
             <Button 
@@ -223,23 +223,25 @@ const CoverLetterPage: React.FC = () => {
           )}
         </div>
         
-        <div>
-          {isChangingTemplate ? (
-            <div className="h-[800px] flex items-center justify-center bg-gray-50 rounded-lg border shadow-md">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                <p className="mt-4 text-gray-600">Updating template...</p>
-              </div>
-            </div>
-          ) : (
-            <CoverLetterPreview 
-              coverLetterData={currentCoverLetter as CoverLetterData}
-              templateId={selectedTemplateId || 'modern'}
-              isLoading={isLoading}
-            />
-          )}
+        <div className="h-[80vh] flex flex-col">
+          <ExportOptions />
           
-          {coverLetterFields && <ExportOptions />}
+          <div className="flex-1">
+            {isChangingTemplate ? (
+              <div className="h-full flex items-center justify-center bg-gray-50 border">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  <p className="mt-4 text-gray-600">Updating template...</p>
+                </div>
+              </div>
+            ) : (
+              <CoverLetterPreview 
+                coverLetterData={currentCoverLetter as CoverLetterData}
+                templateId={selectedTemplateId || 'modern'}
+                isLoading={isLoading}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
