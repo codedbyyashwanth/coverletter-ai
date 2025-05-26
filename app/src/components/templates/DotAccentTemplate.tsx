@@ -167,7 +167,6 @@ const DotAccentTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} })
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
             <Text style={styles.name}>{name}</Text>
-            <Text style={styles.title}>Cover Letter</Text>
           </View>
           <View style={styles.headerRight}>
             <View style={styles.contactInfo}>
@@ -190,7 +189,7 @@ const DotAccentTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} })
       </View>
       
       {/* Subject line */}
-      <Text style={styles.subjectLine}>Re: {subject}</Text>
+      <Text style={styles.subjectLine}>{subject}</Text>
       
       {/* Greeting */}
       <Text style={styles.greeting}>{greeting}</Text>

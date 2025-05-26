@@ -131,7 +131,6 @@ const AccentBorderTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {}
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.name}>{name}</Text>
-          <Text style={styles.title}>Cover Letter</Text>
           
           <View style={styles.contactInfo}>
             <Text style={styles.contactLine}>
@@ -162,7 +161,7 @@ const AccentBorderTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {}
         </View>
         
         {/* Subject line */}
-        <Text style={styles.subjectLine}>Re: {subject}</Text>
+        <Text style={styles.subjectLine}>{subject}</Text>
         
         {/* Greeting */}
         <Text style={styles.greeting}>{greeting}</Text>

@@ -149,7 +149,7 @@ const MinimalistTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} }
       </View>
       
       {/* Subject line */}
-      <Text style={styles.subjectLine}>Re: {subject}</Text>
+      <Text style={styles.subjectLine}>{subject}</Text>
       
       {/* Greeting */}
       <Text style={styles.greeting}>{greeting}</Text>
@@ -171,11 +171,6 @@ const MinimalistTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} }
       <Text style={styles.signature}>
         {signature},{'\n\n'}{name}
       </Text>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>{name} • Cover Letter • Page 1 of 1</Text>
-      </View>
     </View>
   );
 };

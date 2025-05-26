@@ -160,10 +160,6 @@ const MonogramTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} }) 
         <View style={styles.monogramCircle}>
           <Text style={styles.monogramText}>{getMonogram(name)}</Text>
         </View>
-        
-        <View style={styles.verticalTextContainer}>
-          <Text style={styles.verticalText}>COVER LETTER</Text>
-        </View>
       </View>
       
       {/* Main Content */}
@@ -189,7 +185,7 @@ const MonogramTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} }) 
         </View>
         
         {/* Subject line */}
-        <Text style={styles.subjectLine}>Re: {subject}</Text>
+        <Text style={styles.subjectLine}>{subject}</Text>
         
         {/* Greeting */}
         <Text style={styles.greeting}>{greeting}</Text>

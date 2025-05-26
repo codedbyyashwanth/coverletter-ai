@@ -117,7 +117,6 @@ const BoldHeaderTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} }
       {/* Bold Header */}
       <View style={styles.header}>
         <Text style={styles.headerName}>{name}</Text>
-        <Text style={styles.headerTitle}>Cover Letter</Text>
         
         <View style={styles.contactGrid}>
           <View style={styles.contactItem}>
@@ -147,7 +146,7 @@ const BoldHeaderTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} }
         </View>
         
         {/* Subject line */}
-        <Text style={styles.subjectLine}>Re: {subject}</Text>
+        <Text style={styles.subjectLine}>{subject}</Text>
         
         {/* Greeting */}
         <Text style={styles.greeting}>{greeting}</Text>
