@@ -223,7 +223,7 @@ const CoverLetterPage: React.FC = () => {
           )}
         </div>
         
-        <div className="h-[80vh] flex flex-col">
+        <div className=" h-[100vh] flex flex-col">
           <ExportOptions />
           
           <div className="flex-1">
