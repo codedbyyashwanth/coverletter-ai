@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import type { CoverLetterData } from '@/types/coverLetter';
 import { useSelector } from 'react-redux';
-import { selectEditedContent } from '@/store/slices/coverLetterSlice';
+import { selectCoverLetterFields } from '@/store/slices/coverLetterSlice';
 import { Document, Page } from '@react-pdf/renderer';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -26,16 +26,16 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
   isLoading = false,
 }) => {
   const [renderError, setRenderError] = useState<string | null>(null);
-  const [key, setKey] = useState<number>(0); // Add a key for forced re-rendering
+  const [key, setKey] = useState<number>(0);
   
-  // Get the edited content from Redux store if available
-  const editedContent = useSelector(selectEditedContent);
+  // Get the current fields from Redux store for real-time updates
+  const currentFields = useSelector(selectCoverLetterFields);
   
-  // Reset error state and force re-render when template changes
+  // Reset error state and force re-render when template or fields change
   useEffect(() => {
     setRenderError(null);
-    setKey(prev => prev + 1); // Force re-render on template change
-  }, [templateId]);
+    setKey(prev => prev + 1);
+  }, [templateId, currentFields]);
 
   if (isLoading) {
     return (
@@ -48,7 +48,7 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
     );
   }
   
-  if (!coverLetterData || !coverLetterData.content) {
+  if (!coverLetterData || !currentFields) {
     return (
       <Card className="p-6 shadow-md h-[800px] flex items-center justify-center">
         <p className="text-gray-500">No cover letter generated yet</p>
@@ -66,34 +66,51 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
           </AlertDescription>
         </Alert>
         <div className="p-4 border rounded-md h-[700px] overflow-auto">
-          <h3 className="text-lg font-bold mb-4">Cover Letter Content:</h3>
-          <pre className="whitespace-pre-wrap font-mono text-sm">
-            {editedContent || coverLetterData.content || 'No content available'}
-          </pre>
+          <h3 className="text-lg font-bold mb-4">Cover Letter Preview:</h3>
+          <div className="space-y-4 text-sm">
+            <div><strong>Name:</strong> {currentFields.name}</div>
+            <div><strong>Email:</strong> {currentFields.email}</div>
+            <div><strong>Phone:</strong> {currentFields.phone}</div>
+            <div><strong>Company:</strong> {currentFields.companyName}</div>
+            <div><strong>Position:</strong> {currentFields.position}</div>
+            <div><strong>Date:</strong> {currentFields.date}</div>
+            <div><strong>Greeting:</strong> {currentFields.greeting}</div>
+            <div><strong>Opening:</strong> {currentFields.openingParagraph}</div>
+            {currentFields.bodyParagraphs.map((para, index) => (
+              <div key={index}><strong>Body {index + 1}:</strong> {para}</div>
+            ))}
+            <div><strong>Closing:</strong> {currentFields.closingParagraph}</div>
+            <div><strong>Signature:</strong> {currentFields.signature}</div>
+          </div>
         </div>
       </Card>
     );
   }
 
-  // Use edited content if available, otherwise use the original content
-  const contentToRender = editedContent || coverLetterData.content || '';
+  // Use current fields for real-time updates
+  const fieldsToUse = currentFields;
   const resumeData = coverLetterData.resumeData || {};
 
   // Render the appropriate template
   const renderTemplate = () => {
     try {
+      const commonProps = {
+        fields: fieldsToUse,
+        resumeData: resumeData,
+      };
+
       switch (templateId) {
         case 'modern':
-          return <AccentBorderTemplate resumeData={resumeData} content={contentToRender} />;
+          return <AccentBorderTemplate {...commonProps} />;
         case 'classic':
-          return <BoldHeaderTemplate resumeData={resumeData} content={contentToRender} />;
+          return <BoldHeaderTemplate {...commonProps} />;
         case 'creative':
-          return <DotAccentTemplate resumeData={resumeData} content={contentToRender} />;
+          return <DotAccentTemplate {...commonProps} />;
         case 'monogram':
-          return <MonogramTemplate resumeData={resumeData} content={contentToRender} />;
+          return <MonogramTemplate {...commonProps} />;
         case 'minimal':
         default:
-          return <MinimalistTemplate resumeData={resumeData} content={contentToRender} />;
+          return <MinimalistTemplate {...commonProps} />;
       }
     } catch (error) {
       console.error("Error rendering template:", error);
@@ -102,7 +119,6 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
     }
   };
 
-  // Use a dynamic import for the PDFViewer to prevent rendering issues
   const PDFPreview = React.lazy(() => import('./PDFPreview'));
 
   return (

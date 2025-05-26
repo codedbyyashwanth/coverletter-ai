@@ -2,7 +2,6 @@ import React from 'react';
 import { Text, View, StyleSheet } from '@react-pdf/renderer';
 import type { TemplateProps } from './index';
 
-// Create styles
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
@@ -59,11 +58,7 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
   header: {
-    marginBottom: 35,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    borderBottomStyle: 'solid',
+    marginBottom: 25,
   },
   name: {
     fontSize: 28,
@@ -71,53 +66,77 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     marginBottom: 10,
   },
-  contactGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 20,
-    marginTop: 8,
-  },
-  contactItem: {
+  contactInfo: {
     fontSize: 11,
     color: '#6B7280',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-    minWidth: '45%',
+    lineHeight: 1.4,
   },
-  dateSection: {
-    marginBottom: 25,
+  contactLine: {
+    marginBottom: 3,
   },
   date: {
     fontSize: 11,
     color: '#374151',
-    marginBottom: 15,
+    marginBottom: 20,
   },
-  recipient: {
+  companyInfo: {
     fontSize: 11,
     color: '#374151',
-    marginBottom: 5,
+    marginBottom: 20,
+    lineHeight: 1.4,
+  },
+  companyLine: {
+    marginBottom: 3,
+  },
+  subjectLine: {
+    fontSize: 11,
+    color: '#374151',
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  greeting: {
+    fontSize: 11,
+    color: '#374151',
+    marginBottom: 15,
   },
   contentContainer: {
     fontSize: 11,
     color: '#374151',
     lineHeight: 1.7,
+    marginBottom: 20,
   },
   paragraph: {
     marginBottom: 12,
     textAlign: 'justify',
   },
   signature: {
-    marginTop: 25,
     fontSize: 11,
     color: '#374151',
+    marginTop: 20,
   },
 });
 
-const MonogramTemplate: React.FC<TemplateProps> = ({ resumeData = {}, content = '' }) => {
-  const name = resumeData?.name || 'John Doe';
-  const email = resumeData?.email || 'john.doe@example.com';
-  const phone = resumeData?.phone || '(123) 456-7890';
+const MonogramTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} }) => {
+  // Use structured fields if available, otherwise fall back to resumeData
+  const name = fields?.name || resumeData?.name || 'John Doe';
+  const email = fields?.email || resumeData?.email || 'john.doe@example.com';
+  const phone = fields?.phone || resumeData?.phone || '(123) 456-7890';
+  const address = fields?.address || '';
+  
+  const companyName = fields?.companyName || 'Company Name';
+  const companyAddress = fields?.companyAddress || '';
+  const hiringManagerName = fields?.hiringManagerName || '';
+  const position = fields?.position || 'Position';
+  
+  const date = fields?.date || new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  const subject = fields?.subject || `Application for ${position}`;
+  const greeting = fields?.greeting || 'Dear Hiring Manager,';
+  const content = fields?.content || '';
+  const signature = fields?.signature || 'Sincerely';
   
   // Create monogram from name
   const getMonogram = (fullName: string) => {
@@ -128,75 +147,52 @@ const MonogramTemplate: React.FC<TemplateProps> = ({ resumeData = {}, content = 
     return fullName.substring(0, 2).toUpperCase();
   };
 
-  // Process the content - split into structured sections
-  let processedContent = '';
-  if (content && content.trim()) {
-    // Clean up the content and format it properly
-    const lines = content.split('\n').filter(line => line.trim() !== '');
-    
-    // Find the main content (skip header info, date, company info)
-    let contentStart = 0;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].toLowerCase();
-      if (line.includes('dear') || line.includes('application') || 
-          line.includes('hiring') || line.includes('position')) {
-        contentStart = i;
-        break;
-      }
-    }
-    
-    // Join the main content
-    const mainLines = lines.slice(contentStart);
-    processedContent = mainLines.join('\n\n');
-  }
-
   // Split content into paragraphs
-  const paragraphs = processedContent
-    .split(/\n\n+/)
+  const paragraphs = content
+    .split(/\n\s*\n/) // Split by double newlines
     .filter(para => para.trim() !== '')
     .map(para => para.trim());
-
-  // Get current date
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
 
   return (
     <View style={styles.container}>
       {/* Left Sidebar with Monogram */}
       <View style={styles.sidebar}>
-        {/* Monogram Circle */}
         <View style={styles.monogramCircle}>
           <Text style={styles.monogramText}>{getMonogram(name)}</Text>
         </View>
         
-        {/* Vertical Text */}
-        {/* <View style={styles.verticalTextContainer}>
+        <View style={styles.verticalTextContainer}>
           <Text style={styles.verticalText}>COVER LETTER</Text>
-        </View> */}
+        </View>
       </View>
       
-      {/* Right Column - Main Content */}
+      {/* Main Content */}
       <View style={styles.mainContent}>
-        {/* Header */}
+        {/* Header with contact info */}
         <View style={styles.header}>
           <Text style={styles.name}>{name}</Text>
-          <View style={styles.contactGrid}>
-            <View style={styles.contactItem}>
-              <Text>{email}</Text>
-            </View>
-            <View style={styles.contactItem}>
-              <Text>{phone}</Text>
-            </View>
+          <View style={styles.contactInfo}>
+            <Text style={styles.contactLine}>{email}</Text>
+            <Text style={styles.contactLine}>{phone}</Text>
+            {address && <Text style={styles.contactLine}>{address}</Text>}
           </View>
         </View>
         
         {/* Date */}
-        <View style={styles.dateSection}>
-          <Text style={styles.date}>{currentDate}</Text>
+        <Text style={styles.date}>{date}</Text>
+        
+        {/* Company Information */}
+        <View style={styles.companyInfo}>
+          {hiringManagerName && <Text style={styles.companyLine}>{hiringManagerName}</Text>}
+          <Text style={styles.companyLine}>{companyName}</Text>
+          {companyAddress && <Text style={styles.companyLine}>{companyAddress}</Text>}
         </View>
+        
+        {/* Subject line */}
+        <Text style={styles.subjectLine}>Re: {subject}</Text>
+        
+        {/* Greeting */}
+        <Text style={styles.greeting}>{greeting}</Text>
         
         {/* Content */}
         <View style={styles.contentContainer}>
@@ -205,25 +201,16 @@ const MonogramTemplate: React.FC<TemplateProps> = ({ resumeData = {}, content = 
               <Text key={index} style={styles.paragraph}>{paragraph}</Text>
             ))
           ) : (
-            <>
-              <Text style={styles.paragraph}>
-                Dear Hiring Manager,
-              </Text>
-              <Text style={styles.paragraph}>
-                I am writing to express my strong interest in joining your team. 
-                My background and skills align well with your requirements, and I am 
-                excited about the opportunity to contribute to your organization.
-              </Text>
-              <Text style={styles.paragraph}>
-                Thank you for your time and consideration. I look forward to hearing from you.
-              </Text>
-            </>
+            <Text style={styles.paragraph}>
+              Please add your cover letter content in the editor.
+            </Text>
           )}
-          
-          <Text style={styles.signature}>
-            Sincerely,{'\n'}{name}
-          </Text>
         </View>
+        
+        {/* Signature */}
+        <Text style={styles.signature}>
+          {signature},{'\n\n'}{name}
+        </Text>
       </View>
     </View>
   );

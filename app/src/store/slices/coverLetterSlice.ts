@@ -1,11 +1,10 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { CoverLetterData, Template } from '../../types/coverLetter';
+import type { CoverLetterData, CoverLetterFields, Template } from '../../types/coverLetter';
 import type { RootState } from '../index';
 
 interface CoverLetterState {
     currentCoverLetter: CoverLetterData | null;
     templates: Template[];
-    editedContent: string | null;
     selectedTemplateId: string | null;
     loading: boolean;
     error: string | null;
@@ -47,7 +46,6 @@ const initialTemplates: Template[] = [
 const initialState: CoverLetterState = {
     currentCoverLetter: null,
     templates: initialTemplates,
-    editedContent: null,
     selectedTemplateId: 'modern',
     loading: false,
     error: null,
@@ -58,41 +56,47 @@ const coverLetterSlice = createSlice({
     initialState,
     reducers: {
         setCoverLetter: (state, action: PayloadAction<CoverLetterData>) => {
-        state.currentCoverLetter = action.payload;
-        state.editedContent = null;
-        state.error = null;
+            state.currentCoverLetter = action.payload;
+            state.error = null;
         },
         clearCoverLetter: (state) => {
-        state.currentCoverLetter = null;
+            state.currentCoverLetter = null;
         },
-        updateEditedContent: (state, action: PayloadAction<string>) => {
-            state.editedContent = action.payload;
+        updateCoverLetterField: (state, action: PayloadAction<{
+            field: keyof CoverLetterFields;
+            value: string;
+        }>) => {
+            if (state.currentCoverLetter) {
+                const { field, value } = action.payload;
+                (state.currentCoverLetter.fields as any)[field] = value;
+                state.currentCoverLetter.lastEdited = new Date();
+            }
         },
         setSelectedTemplate: (state, action: PayloadAction<string>) => {
-        state.selectedTemplateId = action.payload;
+            state.selectedTemplateId = action.payload;
         },
         setCoverLetterLoading: (state, action: PayloadAction<boolean>) => {
-        state.loading = action.payload;
+            state.loading = action.payload;
         },
         setCoverLetterError: (state, action: PayloadAction<string>) => {
-        state.error = action.payload;
-        state.loading = false;
+            state.error = action.payload;
+            state.loading = false;
         },
     },
 });
 
 export const {
-  setCoverLetter,
-  clearCoverLetter,
-  updateEditedContent,
-  setSelectedTemplate,
-  setCoverLetterLoading,
-  setCoverLetterError,
+    setCoverLetter,
+    clearCoverLetter,
+    updateCoverLetterField,
+    setSelectedTemplate,
+    setCoverLetterLoading,
+    setCoverLetterError,
 } = coverLetterSlice.actions;
 
 // Selectors
-export const selectEditedContent = (state: RootState) => state.coverLetter.editedContent;
 export const selectCurrentCoverLetter = (state: RootState) => state.coverLetter.currentCoverLetter;
+export const selectCoverLetterFields = (state: RootState) => state.coverLetter.currentCoverLetter?.fields;
 export const selectTemplates = (state: RootState) => state.coverLetter.templates;
 export const selectSelectedTemplateId = (state: RootState) => state.coverLetter.selectedTemplateId;
 export const selectCoverLetterLoading = (state: RootState) => state.coverLetter.loading;

@@ -4,6 +4,8 @@ export { default as BoldHeaderTemplate } from './BoldHeaderTemplate';
 export { default as MinimalistTemplate } from './MinimalistTemplate';
 export { default as AccentBorderTemplate } from './AccentBorderTemplate';
 
+import type { CoverLetterFields } from '@/types/coverLetter';
+
 export interface TemplateProps {
   resumeData?: {
     name?: string;
@@ -25,5 +27,6 @@ export interface TemplateProps {
       all?: string[];
     };
   };
-  content?: string;
+  content?: string; // For backwards compatibility
+  fields?: CoverLetterFields; // New structured fields
 }

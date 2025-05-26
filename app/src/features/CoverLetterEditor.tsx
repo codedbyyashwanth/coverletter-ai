@@ -1,154 +1,215 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  selectCurrentCoverLetter, 
-  selectEditedContent,
-  updateEditedContent
+    selectCoverLetterFields,
+    updateCoverLetterField
 } from '@/store/slices/coverLetterSlice';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Copy, RefreshCw } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const CoverLetterEditor: React.FC = () => {
-  const dispatch = useDispatch();
-  const currentCoverLetter = useSelector(selectCurrentCoverLetter);
-  const editedContent = useSelector(selectEditedContent);
-  const [localContent, setLocalContent] = useState<string>('');
-  const [isCopied, setIsCopied] = useState(false);
+    const dispatch = useDispatch();
+    const fields = useSelector(selectCoverLetterFields);
 
-  // Initialize the editor content when the cover letter changes or on first load
-  useEffect(() => {
-    if (currentCoverLetter?.content) {
-      // If we already have edited content, use that
-      if (editedContent) {
-        setLocalContent(editedContent);
-        return;
-      }
-
-      // Get user info
-      const userName = currentCoverLetter.resumeData?.name || 'Your Name';
-      const userEmail = currentCoverLetter.resumeData?.email || 'your.email@example.com';
-      const userPhone = currentCoverLetter.resumeData?.phone || 'your phone';
-      const companyName = currentCoverLetter.jobData?.company || 'Company Name';
-      const position = currentCoverLetter.jobData?.position || 'Position';
-      
-      // Format today's date
-      const today = new Date();
-      const formattedDate = today.toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-      });
-      
-      // Create content blocks from the generated letter
-      const contentBlocks = currentCoverLetter.content.split('\n\n');
-      
-      // Extract main paragraphs
-      let mainContent = '';
-      if (contentBlocks.length >= 3) {
-        mainContent = contentBlocks.slice(0, -1).join('\n\n');
-      } else {
-        mainContent = currentCoverLetter.content;
-      }
-      
-      // Create a professional template without placeholder address lines
-      const professionalTemplate = `${userName}
-${userPhone}
-${userEmail}
-
-${companyName}
-Hiring Team
-
-${formattedDate}
-
-Application for ${position}
-
-Dear Hiring Team,
-
-${mainContent}
-
-I would welcome the opportunity to discuss how my skills and experiences can contribute to your team's success. Thank you for considering my application, and I look forward to your response.
-
-Best regards,
-${userName}`;
-      
-      setLocalContent(professionalTemplate);
-      // Also update Redux state
-      dispatch(updateEditedContent(professionalTemplate));
+    if (!fields) {
+        return (
+            <Card className="p-6 shadow-md">
+                <div className="text-center text-gray-500">
+                    No cover letter data available
+                </div>
+            </Card>
+        );
     }
-  }, [currentCoverLetter, editedContent, dispatch]);
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    setLocalContent(newContent);
-    // Update Redux state with the edited content to sync with preview
-    dispatch(updateEditedContent(newContent));
-  };
+    const handleFieldUpdate = (field: keyof typeof fields, value: string) => {
+        dispatch(updateCoverLetterField({ field, value }));
+    };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(localContent);
-    setIsCopied(true);
-    toast.success('Cover letter copied to clipboard');
-    setTimeout(() => setIsCopied(false), 2000);
-  };
+    const setCurrentDate = () => {
+        const currentDate = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        handleFieldUpdate('date', currentDate);
+        toast.success('Date updated to today');
+    };
 
-  const handleFormatText = () => {
-    try {
-      // Simple formatting - make sure paragraphs are separated by double newlines
-      const paragraphs = localContent.split(/\n+/).filter(p => p.trim() !== '');
-      const formattedContent = paragraphs.join('\n\n');
-      
-      setLocalContent(formattedContent);
-      dispatch(updateEditedContent(formattedContent));
-      toast.success('Text formatting applied');
-    } catch (error) {
-      toast.error('Error formatting text');
-    }
-  };
+    return (
+        <div className="space-y-6">
+            {/* Personal Information */}
+            <Card className="shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-lg">Personal Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Full Name</label>
+                            <Input
+                                value={fields.name}
+                                onChange={(e) => handleFieldUpdate('name', e.target.value)}
+                                placeholder="Your full name"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Email Address</label>
+                            <Input
+                                type="email"
+                                value={fields.email}
+                                onChange={(e) => handleFieldUpdate('email', e.target.value)}
+                                placeholder="your.email@example.com"
+                            />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Phone Number</label>
+                            <Input
+                                value={fields.phone}
+                                onChange={(e) => handleFieldUpdate('phone', e.target.value)}
+                                placeholder="(123) 456-7890"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Address (Optional)</label>
+                            <Input
+                                value={fields.address || ''}
+                                onChange={(e) => handleFieldUpdate('address', e.target.value)}
+                                placeholder="City, State"
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
-  if (!currentCoverLetter) {
-    return null;
-  }
+            {/* Company Information */}
+            <Card className="shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-lg">Company Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Company Name</label>
+                            <Input
+                                value={fields.companyName}
+                                onChange={(e) => handleFieldUpdate('companyName', e.target.value)}
+                                placeholder="Company Name"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Position</label>
+                            <Input
+                                value={fields.position}
+                                onChange={(e) => handleFieldUpdate('position', e.target.value)}
+                                placeholder="Job Title"
+                            />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Hiring Manager (Optional)</label>
+                            <Input
+                                value={fields.hiringManagerName || ''}
+                                onChange={(e) => handleFieldUpdate('hiringManagerName', e.target.value)}
+                                placeholder="e.g., Mr. Smith, Ms. Johnson"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Company Address (Optional)</label>
+                            <Input
+                                value={fields.companyAddress || ''}
+                                onChange={(e) => handleFieldUpdate('companyAddress', e.target.value)}
+                                placeholder="Company Address"
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
-  return (
-    <Card className="p-6 shadow-md">
-      <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Edit Your Cover Letter</h2>
-        <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleFormatText}
-            className="flex items-center"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Format Text
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleCopy}
-            className="flex items-center"
-          >
-            <Copy className="mr-2 h-4 w-4" />
-            {isCopied ? 'Copied!' : 'Copy'}
-          </Button>
+            {/* Letter Details */}
+            <Card className="shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-lg">Letter Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Date</label>
+                            <div className="flex gap-2">
+                                <Input
+                                    value={fields.date}
+                                    onChange={(e) => handleFieldUpdate('date', e.target.value)}
+                                    placeholder="Month Day, Year"
+                                    className="flex-1"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={setCurrentDate}
+                                    className="shrink-0"
+                                >
+                                    <Calendar className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Subject</label>
+                            <Input
+                                value={fields.subject}
+                                onChange={(e) => handleFieldUpdate('subject', e.target.value)}
+                                placeholder="Application for Frontend Developer"
+                            />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Greeting</label>
+                            <Input
+                                value={fields.greeting}
+                                onChange={(e) => handleFieldUpdate('greeting', e.target.value)}
+                                placeholder="Dear Hiring Manager"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Signature</label>
+                            <Input
+                                value={fields.signature}
+                                onChange={(e) => handleFieldUpdate('signature', e.target.value)}
+                                placeholder="Sincerely"
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Letter Content */}
+            <Card className="shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-lg">Letter Content</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Cover Letter Body</label>
+                        <Textarea
+                            value={fields.content}
+                            onChange={(e) => handleFieldUpdate('content', e.target.value)}
+                            placeholder="Write your complete cover letter content here. Include your introduction, why you're interested in the position, your relevant experience and skills, and a closing statement..."
+                            rows={15}
+                            className="font-mono text-sm"
+                        />
+                        <p className="mt-2 text-sm text-gray-500">
+                            <strong>Tip:</strong> Write your complete letter content here. Use line breaks to separate paragraphs for better formatting.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
-      </div>
-
-      <Textarea
-        value={localContent}
-        onChange={handleContentChange}
-        className="min-h-[500px] font-mono text-sm"
-      />
-
-      <p className="mt-3 text-sm text-gray-500">
-        <strong>Tip:</strong> Format your cover letter as shown in the template above. 
-        Include your contact details at the top, company details, 
-        and use bullet points (•) for listing accomplishments if needed.
-      </p>
-    </Card>
-  );
+    );
 };

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import type { ResumeData } from '../types/resume';
 import type { JobData } from '../types/job';
-import type { CoverLetterData } from '../types/coverLetter';
+import type { CoverLetterData, CoverLetterFields } from '../types/coverLetter';
 import { generateCoverLetter } from '../services/coverLetterService';
 import {
   setCoverLetter,
@@ -15,6 +15,32 @@ export const useCoverLetterGenerator = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const createFieldsFromData = (content: string, resumeData: ResumeData, jobData: JobData): CoverLetterFields => {
+        // Get current date
+        const currentDate = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        
+        // Simple approach - just use the generated content as-is
+        return {
+            name: resumeData.name || 'Your Name',
+            email: resumeData.email || 'your.email@example.com',
+            phone: resumeData.phone || 'Your Phone',
+            address: '',
+            companyName: jobData.company || 'Company Name',
+            companyAddress: '',
+            hiringManagerName: '',
+            position: jobData.position || 'Position',
+            date: currentDate,
+            subject: `Application for ${jobData.position || 'Position'}`,
+            greeting: 'Dear Hiring Manager,',
+            content: content || 'Please add your cover letter content here.',
+            signature: 'Sincerely'
+        };
+    };
+
     const generateLetter = async (
         resumeData: ResumeData,
         jobData: JobData,
@@ -25,24 +51,37 @@ export const useCoverLetterGenerator = () => {
         dispatch(setCoverLetterLoading(true));
         
         try {
-        const content = await generateCoverLetter(resumeData, jobData);
-        const coverLetterData: CoverLetterData = {
-            content,
-            templateId,
-            resumeData,
-            jobData,
-            lastEdited: new Date(),
-        };
-        
-        dispatch(setCoverLetter(coverLetterData));
-        setIsLoading(false);
-        return coverLetterData;
+            console.log('Starting cover letter generation...'); // Debug log
+            
+            const content = await generateCoverLetter(resumeData, jobData);
+            console.log('Generated content:', content); // Debug log
+            
+            const fields = createFieldsFromData(content, resumeData, jobData);
+            console.log('Created fields:', fields); // Debug log
+            
+            const coverLetterData: CoverLetterData = {
+                content,
+                fields,
+                templateId,
+                resumeData,
+                jobData,
+                lastEdited: new Date(),
+            };
+            
+            dispatch(setCoverLetter(coverLetterData));
+            dispatch(setCoverLetterLoading(false));
+            setIsLoading(false);
+            
+            console.log('Cover letter generated successfully'); // Debug log
+            return coverLetterData;
         } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to generate cover letter';
-        setError(errorMessage);
-        dispatch(setCoverLetterError(errorMessage));
-        setIsLoading(false);
-        return null;
+            console.error('Error generating cover letter:', err); // Debug log
+            const errorMessage = err instanceof Error ? err.message : 'Failed to generate cover letter';
+            setError(errorMessage);
+            dispatch(setCoverLetterError(errorMessage));
+            dispatch(setCoverLetterLoading(false));
+            setIsLoading(false);
+            return null;
         }
     };
 

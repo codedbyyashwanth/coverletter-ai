@@ -2,7 +2,6 @@ import React from 'react';
 import { Text, View, StyleSheet } from '@react-pdf/renderer';
 import type { TemplateProps } from './index';
 
-// Create styles
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'column',
@@ -13,83 +12,105 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#1E3A8A',
     color: '#FFFFFF',
-    padding: 30,
+    padding: 40,
+    paddingBottom: 30,
   },
   headerName: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'normal',
-    marginBottom: 15,
+    marginBottom: 20,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
   },
   contactGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 20,
+    gap: 25,
   },
   contactItem: {
-    fontSize: 10,
+    fontSize: 11,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  contactText: {
-    marginLeft: 4,
-  },
   mainContent: {
-    padding: 30,
+    padding: 40,
     flex: 1,
+  },
+  date: {
+    fontSize: 11,
+    color: '#374151',
+    marginBottom: 25,
+  },
+  companyInfo: {
+    fontSize: 11,
+    color: '#374151',
+    marginBottom: 25,
+    lineHeight: 1.4,
+  },
+  companyLine: {
+    marginBottom: 4,
+  },
+  subjectLine: {
+    fontSize: 11,
+    color: '#374151',
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  greeting: {
+    fontSize: 11,
+    color: '#374151',
+    marginBottom: 15,
   },
   contentContainer: {
     fontSize: 11,
     color: '#374151',
-    lineHeight: 1.6,
+    lineHeight: 1.7,
+    marginBottom: 20,
   },
   paragraph: {
-    marginBottom: 10,
+    marginBottom: 12,
     textAlign: 'justify',
   },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 30,
-    right: 30,
-    borderTopWidth: 1,  // Fixed: Changed from 'borderTop: 1'
-    borderTopColor: '#E5E7EB',
-    paddingTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  footerText: {
-    fontSize: 9,
-    color: '#9CA3AF',
+  signature: {
+    fontSize: 11,
+    color: '#374151',
+    marginTop: 20,
   },
 });
 
-const BoldHeaderTemplate: React.FC<TemplateProps> = ({ resumeData = {}, content = '' }) => {
-  const name = resumeData?.name || 'John Doe';
-  const email = resumeData?.email || 'john.doe@example.com';
-  const phone = resumeData?.phone || '(123) 456-7890';
+const BoldHeaderTemplate: React.FC<TemplateProps> = ({ fields, resumeData = {} }) => {
+  // Use structured fields if available, otherwise fall back to resumeData
+  const name = fields?.name || resumeData?.name || 'John Doe';
+  const email = fields?.email || resumeData?.email || 'john.doe@example.com';
+  const phone = fields?.phone || resumeData?.phone || '(123) 456-7890';
+  const address = fields?.address || '';
+  
+  const companyName = fields?.companyName || 'Company Name';
+  const companyAddress = fields?.companyAddress || '';
+  const hiringManagerName = fields?.hiringManagerName || '';
+  const position = fields?.position || 'Position';
+  
+  const date = fields?.date || new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  const subject = fields?.subject || `Application for ${position}`;
+  const greeting = fields?.greeting || 'Dear Hiring Manager,';
+  const content = fields?.content || '';
+  const signature = fields?.signature || 'Sincerely';
 
-  // Process the content - ensuring we have paragraphs to display
-  let paragraphs: string[] = [];
-  if (content && content.trim()) {
-    // Split by double newlines to get paragraphs
-    paragraphs = content.split(/\n\n+/).filter(para => para.trim() !== '');
-    
-    // If no paragraphs were found, try splitting by single newlines
-    if (paragraphs.length === 0) {
-      paragraphs = content.split(/\n+/).filter(para => para.trim() !== '');
-    }
-    
-    // If still no paragraphs, just use the whole content as one paragraph
-    if (paragraphs.length === 0 && content.trim()) {
-      paragraphs = [content.trim()];
-    }
-  }
+  // Split content into paragraphs
+  const paragraphs = content
+    .split(/\n\s*\n/) // Split by double newlines
+    .filter(para => para.trim() !== '')
+    .map(para => para.trim());
 
   return (
     <View style={styles.container}>
@@ -100,16 +121,37 @@ const BoldHeaderTemplate: React.FC<TemplateProps> = ({ resumeData = {}, content 
         
         <View style={styles.contactGrid}>
           <View style={styles.contactItem}>
-            <Text style={styles.contactText}>{email}</Text>
+            <Text>{email}</Text>
           </View>
           <View style={styles.contactItem}>
-            <Text style={styles.contactText}>{phone}</Text>
+            <Text>{phone}</Text>
           </View>
+          {address && (
+            <View style={styles.contactItem}>
+              <Text>{address}</Text>
+            </View>
+          )}
         </View>
       </View>
       
       {/* Main Content */}
       <View style={styles.mainContent}>
+        {/* Date */}
+        <Text style={styles.date}>{date}</Text>
+        
+        {/* Company Information */}
+        <View style={styles.companyInfo}>
+          {hiringManagerName && <Text style={styles.companyLine}>{hiringManagerName}</Text>}
+          <Text style={styles.companyLine}>{companyName}</Text>
+          {companyAddress && <Text style={styles.companyLine}>{companyAddress}</Text>}
+        </View>
+        
+        {/* Subject line */}
+        <Text style={styles.subjectLine}>Re: {subject}</Text>
+        
+        {/* Greeting */}
+        <Text style={styles.greeting}>{greeting}</Text>
+        
         {/* Content */}
         <View style={styles.contentContainer}>
           {paragraphs.length > 0 ? (
@@ -118,16 +160,15 @@ const BoldHeaderTemplate: React.FC<TemplateProps> = ({ resumeData = {}, content 
             ))
           ) : (
             <Text style={styles.paragraph}>
-              No content available. Please add content to your cover letter.
+              Please add your cover letter content in the editor.
             </Text>
           )}
         </View>
-      </View>
-      
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>{name} • Cover Letter</Text>
-        <Text style={styles.footerText}>Page 1 of 1</Text>
+        
+        {/* Signature */}
+        <Text style={styles.signature}>
+          {signature},{'\n\n'}{name}
+        </Text>
       </View>
     </View>
   );

@@ -6,6 +6,8 @@ import { selectCurrentJob } from '@/store/slices/jobSlice';
 import {
   selectCurrentCoverLetter,
   selectSelectedTemplateId,
+  selectCoverLetterFields,
+  selectCoverLetterLoading,
   setSelectedTemplate,
 } from '@/store/slices/coverLetterSlice';
 import { CoverLetterEditor } from '@/features/CoverLetterEditor';
@@ -25,46 +27,63 @@ const CoverLetterPage: React.FC = () => {
   const jobData = useSelector(selectCurrentJob);
   const currentCoverLetter = useSelector(selectCurrentCoverLetter);
   const selectedTemplateId = useSelector(selectSelectedTemplateId);
-  const { generateLetter, isLoading, error } = useCoverLetterGenerator();
+  const coverLetterFields = useSelector(selectCoverLetterFields);
+  const isLoadingFromStore = useSelector(selectCoverLetterLoading);
+  const { generateLetter, isLoading: isGenerating, error } = useCoverLetterGenerator();
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [isChangingTemplate, setIsChangingTemplate] = useState(false);
+  const [hasTriedGeneration, setHasTriedGeneration] = useState(false);
 
   // Redirect if no resume or job data
   useEffect(() => {
     if (!resumeData) {
       navigate('/resume');
-    } else if (!jobData) {
+      return;
+    }
+    if (!jobData) {
       navigate('/job');
+      return;
     }
   }, [resumeData, jobData, navigate]);
 
-  // Generate cover letter if needed
+  // Generate cover letter if needed - only once
   useEffect(() => {
-    const generateInitialLetter = async () => {
-      if (resumeData && jobData && !currentCoverLetter && !isLoading) {
-        try {
-          await generateLetter(resumeData, jobData, selectedTemplateId || 'modern');
-          setGenerationError(null);
-        } catch (err) {
+    const shouldGenerate = resumeData && 
+                          jobData && 
+                          !currentCoverLetter && 
+                          !isGenerating && 
+                          !isLoadingFromStore && 
+                          !hasTriedGeneration;
+
+    if (shouldGenerate) {
+      console.log('Attempting to generate cover letter...'); // Debug log
+      setHasTriedGeneration(true);
+      
+      generateLetter(resumeData, jobData, selectedTemplateId || 'modern')
+        .then((result) => {
+          if (result) {
+            setGenerationError(null);
+            console.log('Generation successful');
+          } else {
+            setGenerationError('Failed to generate cover letter. Please try again.');
+            console.log('Generation failed - no result returned');
+          }
+        })
+        .catch((err) => {
+          console.error('Generation error:', err);
           setGenerationError('Failed to generate cover letter. Please try again.');
-        }
-      }
-    };
-    
-    generateInitialLetter();
-  }, [resumeData, jobData, currentCoverLetter, selectedTemplateId, isLoading, generateLetter]);
+        });
+    }
+  }, [resumeData, jobData, currentCoverLetter, selectedTemplateId, isGenerating, isLoadingFromStore, hasTriedGeneration, generateLetter]);
 
   // Handle template change with debounce to avoid PDF rendering errors
   const handleTemplateChange = useCallback((templateId: string) => {
-    // Only proceed if it's a new template
     if (templateId !== selectedTemplateId) {
       setIsChangingTemplate(true);
       
-      // Use setTimeout to allow DOM to update before changing template
       setTimeout(() => {
         dispatch(setSelectedTemplate(templateId));
         
-        // Use another setTimeout to allow the template to update before showing it again
         setTimeout(() => {
           setIsChangingTemplate(false);
         }, 300);
@@ -74,9 +93,14 @@ const CoverLetterPage: React.FC = () => {
 
   const handleRegenerateLetter = async () => {
     if (resumeData && jobData) {
+      setHasTriedGeneration(false); // Reset the flag
       try {
-        await generateLetter(resumeData, jobData, selectedTemplateId || 'modern');
-        setGenerationError(null);
+        const result = await generateLetter(resumeData, jobData, selectedTemplateId || 'modern');
+        if (result) {
+          setGenerationError(null);
+        } else {
+          setGenerationError('Failed to regenerate cover letter. Please try again.');
+        }
       } catch (err) {
         setGenerationError('Failed to regenerate cover letter. Please try again.');
       }
@@ -89,6 +113,62 @@ const CoverLetterPage: React.FC = () => {
 
   if (!resumeData || !jobData) {
     return null;
+  }
+
+  // Show loading state while generating initial cover letter
+  const isLoading = isGenerating || isLoadingFromStore;
+  
+  if (!currentCoverLetter && isLoading) {
+    return (
+      <div className="container mx-auto py-8 px-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mx-auto"></div>
+            <h2 className="text-xl font-semibold mt-6 mb-2">Generating Your Cover Letter</h2>
+            <p className="text-gray-600">Please wait while we create your personalized cover letter...</p>
+            {isLoading && (
+              <p className="text-sm text-gray-500 mt-2">This usually takes 10-20 seconds</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if generation failed
+  if (!currentCoverLetter && (error || generationError) && hasTriedGeneration) {
+    return (
+      <div className="container mx-auto py-8 px-6">
+        <div className="max-w-2xl mx-auto">
+          <Alert variant="destructive" className="mb-6">
+            <AlertTitle>Generation Failed</AlertTitle>
+            <AlertDescription>
+              {error || generationError}
+            </AlertDescription>
+          </Alert>
+          
+          <div className="flex space-x-4 justify-center">
+            <Button 
+              variant="outline" 
+              onClick={handleBack}
+              className="flex items-center"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Job Details
+            </Button>
+            
+            <Button 
+              onClick={handleRegenerateLetter}
+              disabled={isLoading}
+              className="flex items-center"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -134,13 +214,22 @@ const CoverLetterPage: React.FC = () => {
             onSelect={handleTemplateChange}
           />
           
-          <CoverLetterEditor />
+          {coverLetterFields ? (
+            <CoverLetterEditor />
+          ) : (
+            <div className="p-6 text-center text-gray-500">
+              No cover letter data available
+            </div>
+          )}
         </div>
         
         <div>
           {isChangingTemplate ? (
             <div className="h-[800px] flex items-center justify-center bg-gray-50 rounded-lg border shadow-md">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                <p className="mt-4 text-gray-600">Updating template...</p>
+              </div>
             </div>
           ) : (
             <CoverLetterPreview 
@@ -150,7 +239,7 @@ const CoverLetterPage: React.FC = () => {
             />
           )}
           
-          <ExportOptions />
+          {coverLetterFields && <ExportOptions />}
         </div>
       </div>
     </div>
