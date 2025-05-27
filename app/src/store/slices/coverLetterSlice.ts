@@ -72,6 +72,13 @@ const coverLetterSlice = createSlice({
                 state.currentCoverLetter.lastEdited = new Date();
             }
         },
+        // New action for batch field updates
+        updateCoverLetterFields: (state, action: PayloadAction<CoverLetterFields>) => {
+            if (state.currentCoverLetter) {
+                state.currentCoverLetter.fields = action.payload;
+                state.currentCoverLetter.lastEdited = new Date();
+            }
+        },
         setSelectedTemplate: (state, action: PayloadAction<string>) => {
             state.selectedTemplateId = action.payload;
         },
@@ -89,6 +96,7 @@ export const {
     setCoverLetter,
     clearCoverLetter,
     updateCoverLetterField,
+    updateCoverLetterFields, // New export
     setSelectedTemplate,
     setCoverLetterLoading,
     setCoverLetterError,

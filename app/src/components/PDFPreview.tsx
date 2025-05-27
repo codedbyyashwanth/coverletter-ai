@@ -38,17 +38,20 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ children }) => {
   return (
     <React.Fragment>
       <ErrorBoundary onError={() => setErrorOccurred(true)}>
-        <PDFViewer
-          style={{
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            borderRadius: '8px'
-          }}
-          showToolbar={false}
-        >
-          {children}
-        </PDFViewer>
+        <div style={{ width: '100%', height: '100%', background: 'transparent' }}>
+          <PDFViewer
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              borderRadius: '8px',
+              backgroundColor: 'transparent'
+            }}
+            showToolbar={false}
+          >
+            {children}
+          </PDFViewer>
+        </div>
       </ErrorBoundary>
     </React.Fragment>
   );

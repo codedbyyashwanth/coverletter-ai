@@ -15,7 +15,7 @@ import { CoverLetterPreview } from '@/components/CoverLetterPreview';
 import { TemplateSelector } from '@/components/TemplateSelector';
 import { ExportOptions } from '@/components/ExportOptions';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { CoverLetterData } from '@/types/coverLetter';
 import { useCoverLetterGenerator } from '@/hooks/useCoverLetterGenerator';
@@ -183,6 +183,15 @@ const CoverLetterPage: React.FC = () => {
           </AlertDescription>
         </Alert>
       )}
+
+      {/* Info Alert about the new editing system */}
+      <Alert className="mb-6">
+        <Info className="h-4 w-4" />
+        <AlertTitle>New Editing Experience</AlertTitle>
+        <AlertDescription>
+          Make your edits and click "Update Preview" to see changes reflected in the preview. This prevents constant re-rendering while you type.
+        </AlertDescription>
+      </Alert>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
@@ -223,7 +232,7 @@ const CoverLetterPage: React.FC = () => {
           )}
         </div>
         
-        <div className=" h-[100vh] flex flex-col">
+        <div className="h-[100vh] flex flex-col">
           <ExportOptions />
           
           <div className="flex-1">
