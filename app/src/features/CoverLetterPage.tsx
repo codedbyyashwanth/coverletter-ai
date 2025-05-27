@@ -183,15 +183,6 @@ const CoverLetterPage: React.FC = () => {
           </AlertDescription>
         </Alert>
       )}
-
-      {/* Info Alert about the new editing system */}
-      <Alert className="mb-6">
-        <Info className="h-4 w-4" />
-        <AlertTitle>New Editing Experience</AlertTitle>
-        <AlertDescription>
-          Make your edits and click "Update Preview" to see changes reflected in the preview. This prevents constant re-rendering while you type.
-        </AlertDescription>
-      </Alert>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
