@@ -10,9 +10,9 @@ import HomePage from '@/pages/HomePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
 // Lazy-loaded feature pages
-const ResumePage = React.lazy(() => import('@/features/ResumePage'));
-const JobPage = React.lazy(() => import('@/features/JobPage'));
-const CoverLetterPage = React.lazy(() => import('@/features/CoverLetterPage'));
+const ResumePage = React.lazy(() => import('@/pages/ResumePage'));
+const JobPage = React.lazy(() => import('@/pages/JobPage'));
+const CoverLetterPage = React.lazy(() => import('@/pages/CoverLetterPage'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen">

@@ -8,11 +8,15 @@ import {
   Download, 
   Clock, 
   CheckCircle, 
-  Star,
   ArrowRight,
   Upload,
   Edit,
-  Sparkles
+  Sparkles,
+  X,
+  Timer,
+  Target,
+  Lightbulb,
+  TrendingUp
 } from 'lucide-react';
 
 const HomePage: React.FC = () => {
@@ -52,7 +56,7 @@ const HomePage: React.FC = () => {
                             </Link>
                         </Button>
                         <Button size="lg" variant="outline" className="text-lg px-8 py-4 h-auto">
-                            See How It Works
+                            <a href="#how-it-works">See How It Works</a>
                         </Button>
                     </div>
 
@@ -75,7 +79,7 @@ const HomePage: React.FC = () => {
             </section>
 
             {/* How It Works Section */}
-            <section className="mx-auto px-4 py-20 bg-white">
+            <section className="mx-auto px-4 py-20 bg-white"  id='how-it-works'>
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-bold mb-6">
@@ -205,76 +209,135 @@ const HomePage: React.FC = () => {
                 </div>
             </section>
 
-            {/* Social Proof Section */}
+            {/* Traditional vs AI-Powered Comparison Section */}
             <section className="container mx-auto px-4 py-20 bg-white">
-                <div className="max-w-4xl mx-auto text-center">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-16">
-                        Trusted by job seekers everywhere
-                    </h2>
-                    
-                    <div className="grid md:grid-cols-3 gap-8 mb-16">
-                        <Card className="bg-gray-50 border-2">
-                            <CardContent className="p-8">
-                                <div className="flex justify-center mb-4">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                                    ))}
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                            Traditional vs AI-Powered Approach
+                        </h2>
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                            See why smart job seekers are switching to AI-powered cover letter generation
+                        </p>
+                    </div>
+
+                    <div className="grid lg:grid-cols-2 gap-8">
+                        {/* Traditional Approach */}
+                        <Card className="border-2 border-gray-200 hover:border-gray-300 transition-colors">
+                            <CardHeader className="text-center pb-6">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Timer className="w-8 h-8 text-gray-600" />
                                 </div>
-                                <p className="text-gray-700 mb-4 italic">
-                                    "CoverAI helped me create a professional cover letter in minutes. I got 3 interviews within a week!"
-                                </p>
-                                <p className="font-semibold">Sarah M.</p>
-                                <p className="text-sm text-gray-500">Software Engineer</p>
+                                <CardTitle className="text-2xl">Traditional Method</CardTitle>
+                                <p className="text-gray-600 font-medium">The old way of writing cover letters</p>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-start space-x-3">
+                                    <X className="w-5 h-5 text-gray-500 mt-1 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium text-gray-900">2-4 hours per letter</p>
+                                        <p className="text-sm text-gray-600">Starting from scratch every time</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3">
+                                    <X className="w-5 h-5 text-gray-500 mt-1 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium text-gray-900">Generic templates</p>
+                                        <p className="text-sm text-gray-600">One-size-fits-all approach</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3">
+                                    <X className="w-5 h-5 text-gray-500 mt-1 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium text-gray-900">Manual skill matching</p>
+                                        <p className="text-sm text-gray-600">Easy to miss key requirements</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3">
+                                    <X className="w-5 h-5 text-gray-500 mt-1 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium text-gray-900">Writer's block</p>
+                                        <p className="text-sm text-gray-600">Struggling with what to say</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3">
+                                    <X className="w-5 h-5 text-gray-500 mt-1 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium text-gray-900">Inconsistent quality</p>
+                                        <p className="text-sm text-gray-600">Varies based on energy and mood</p>
+                                    </div>
+                                </div>
                             </CardContent>
                         </Card>
 
-                        <Card className="bg-gray-50 border-2">
-                            <CardContent className="p-8">
-                                <div className="flex justify-center mb-4">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                                    ))}
+                        {/* AI-Powered Approach */}
+                        <Card className="border-3 border-black hover:shadow-lg transition-all">
+                            <CardHeader className="text-center pb-6">
+                                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Lightbulb className="w-8 h-8 text-white" />
                                 </div>
-                                <p className="text-gray-700 mb-4 italic">
-                                    "The AI perfectly matched my skills to the job requirements. Best tool for job applications!"
-                                </p>
-                                <p className="font-semibold">Michael T.</p>
-                                <p className="text-sm text-gray-500">Marketing Manager</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gray-50 border-2">
-                            <CardContent className="p-8">
-                                <div className="flex justify-center mb-4">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                                    ))}
+                                <CardTitle className="text-2xl">CoverAI Method</CardTitle>
+                                <p className="text-gray-600 font-medium">The smart way to create cover letters</p>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-start space-x-3">
+                                    <CheckCircle className="w-5 h-5 text-black mt-1 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium text-gray-900">30 seconds generation</p>
+                                        <p className="text-sm text-gray-600">AI creates personalized content instantly</p>
+                                    </div>
                                 </div>
-                                <p className="text-gray-700 mb-4 italic">
-                                    "Saved me hours of writing. The templates are beautiful and professional."
-                                </p>
-                                <p className="font-semibold">Emily R.</p>
-                                <p className="text-sm text-gray-500">Product Designer</p>
+                                <div className="flex items-start space-x-3">
+                                    <CheckCircle className="w-5 h-5 text-black mt-1 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium text-gray-900">Fully customized</p>
+                                        <p className="text-sm text-gray-600">Tailored to each job and your background</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3">
+                                    <CheckCircle className="w-5 h-5 text-black mt-1 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium text-gray-900">Smart skill matching</p>
+                                        <p className="text-sm text-gray-600">Automatically highlights relevant experience</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3">
+                                    <CheckCircle className="w-5 h-5 text-black mt-1 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium text-gray-900">No creative blocks</p>
+                                        <p className="text-sm text-gray-600">AI provides professional content every time</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3">
+                                    <CheckCircle className="w-5 h-5 text-black mt-1 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium text-gray-900">Consistent excellence</p>
+                                        <p className="text-sm text-gray-600">Professional quality guaranteed</p>
+                                    </div>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                        <div>
-                            <div className="text-4xl font-bold text-black mb-2">10k+</div>
-                            <div className="text-gray-600">Cover Letters Created</div>
+                    {/* Stats Row */}
+                    <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                        <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
+                            <TrendingUp className="w-12 h-12 text-black mx-auto mb-4" />
+                            <div className="text-3xl font-bold text-black mb-2">95%</div>
+                            <div className="text-gray-900 font-medium mb-1">Time Saved</div>
+                            <div className="text-sm text-gray-600">vs. traditional methods</div>
                         </div>
-                        <div>
-                            <div className="text-4xl font-bold text-black mb-2">95%</div>
-                            <div className="text-gray-600">Success Rate</div>
+                        <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
+                            <Target className="w-12 h-12 text-black mx-auto mb-4" />
+                            <div className="text-3xl font-bold text-black mb-2">3x</div>
+                            <div className="text-gray-900 font-medium mb-1">More Applications</div>
+                            <div className="text-sm text-gray-600">send more applications faster</div>
                         </div>
-                        <div>
-                            <div className="text-4xl font-bold text-black mb-2">30s</div>
-                            <div className="text-gray-600">Average Generation Time</div>
-                        </div>
-                        <div>
-                            <div className="text-4xl font-bold text-black mb-2">5★</div>
-                            <div className="text-gray-600">Average Rating</div>
+                        <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
+                            <Sparkles className="w-12 h-12 text-black mx-auto mb-4" />
+                            <div className="text-3xl font-bold text-black mb-2">100%</div>
+                            <div className="text-gray-900 font-medium mb-1">Customized</div>
+                            <div className="text-sm text-gray-600">every letter is unique</div>
                         </div>
                     </div>
                 </div>
@@ -293,7 +356,7 @@ const HomePage: React.FC = () => {
                     <Button size="lg" variant="secondary" asChild className="text-lg px-10 py-4 h-auto bg-white text-black hover:bg-gray-100">
                         <Link to="/resume" className="flex items-center">
                             Start Creating Your Cover Letter
-                            <ArrowRight className="ml-0 h-5 w-5" />
+                            <ArrowRight className="ml-2 h-5 w-5" />
                         </Link>
                     </Button>
 
