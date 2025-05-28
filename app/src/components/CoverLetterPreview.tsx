@@ -117,21 +117,32 @@ export const CoverLetterPreview: React.FC<CoverLetterPreviewProps> = ({
   const PDFPreview = React.lazy(() => import('./PDFPreview'));
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full flex items-center justify-center bg-neutral-900 sm:bg-neutral-900">
       <React.Suspense 
         fallback={
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full w-full">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         }
       >
-        <PDFPreview key={key}>
-          <Document>
-            <Page size="A4">
-              {renderTemplate()}
-            </Page>
-          </Document>
-        </PDFPreview>
+        <div className="w-full h-full flex justify-center items-center">
+          <PDFPreview key={key}>
+            <Document>
+              <Page 
+                size="A4"
+                style={{
+                  width: '100%',
+                  maxWidth: '100vw',
+                  height: 'auto',
+                  margin: 0,
+                  padding: 0,
+                }}
+              >
+                {renderTemplate()}
+              </Page>
+            </Document>
+          </PDFPreview>
+        </div>
       </React.Suspense>
     </div>
   );

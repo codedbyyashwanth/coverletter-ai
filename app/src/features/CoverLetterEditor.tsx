@@ -98,7 +98,7 @@ export const CoverLetterEditor: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Update Controls - No Card Wrapper */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+            <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row items-center justify-between p-4 bg-gray-50 rounded-lg border">
                 <div className="flex items-center space-x-2">
                     {hasUnsavedChanges && (
                         <span className="text-sm text-amber-600 font-medium">

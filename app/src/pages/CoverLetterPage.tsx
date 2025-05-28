@@ -172,8 +172,8 @@ const CoverLetterPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 px-6 w-10/12 max-w-none">
-      <h1 className="text-3xl font-bold mb-8 text-center">Your Cover Letter</h1>
+    <div className="container px-4 mx-auto lg:py-8 lg:px-6 lg:w-10/12 max-w-none">
+      <h1 className="text-3xl font-</div>bold mb-8 text-center">Your Cover Letter</h1>
       
       {(error || generationError) && (
         <Alert variant="destructive" className="mb-6">
@@ -186,7 +186,7 @@ const CoverLetterPage: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
-          <div className="mb-6 flex space-x-4">
+          <div className="mb-6 flex flex-col lg:flex-row space-y-2 lg:space-y-0 items-center lg:space-x-4">
             <Button 
               variant="outline" 
               size="sm" 
