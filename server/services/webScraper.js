@@ -2,9 +2,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const https = require('https');
 
-async function scrapeJobPosting(url) {
-    console.log(`Attempting to scrape job from URL: ${url}`);
-    
+async function scrapeJobPosting(url) {    
     try {
         // Configure axios with extended timeout and headers to mimic a browser
         const axiosConfig = {

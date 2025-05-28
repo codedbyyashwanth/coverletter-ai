@@ -57,17 +57,14 @@ const CoverLetterPage: React.FC = () => {
                           !hasTriedGeneration;
 
     if (shouldGenerate) {
-      console.log('Attempting to generate cover letter...'); // Debug log
       setHasTriedGeneration(true);
       
       generateLetter(resumeData, jobData, selectedTemplateId || 'modern')
         .then((result) => {
           if (result) {
             setGenerationError(null);
-            console.log('Generation successful');
           } else {
             setGenerationError('Failed to generate cover letter. Please try again.');
-            console.log('Generation failed - no result returned');
           }
         })
         .catch((err) => {

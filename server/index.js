@@ -175,5 +175,4 @@ app.post('/api/generate-cover-letter', async (req, res) => {
 // Start server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`OpenAI API Key ${process.env.OPENAI_API_KEY ? 'is' : 'is NOT'} configured`);
 });

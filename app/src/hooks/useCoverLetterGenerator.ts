@@ -51,13 +51,9 @@ export const useCoverLetterGenerator = () => {
         dispatch(setCoverLetterLoading(true));
         
         try {
-            console.log('Starting cover letter generation...'); // Debug log
             
             const content = await generateCoverLetter(resumeData, jobData);
-            console.log('Generated content:', content); // Debug log
-            
             const fields = createFieldsFromData(content, resumeData, jobData);
-            console.log('Created fields:', fields); // Debug log
             
             const coverLetterData: CoverLetterData = {
                 content,
@@ -72,7 +68,6 @@ export const useCoverLetterGenerator = () => {
             dispatch(setCoverLetterLoading(false));
             setIsLoading(false);
             
-            console.log('Cover letter generated successfully'); // Debug log
             return coverLetterData;
         } catch (err) {
             console.error('Error generating cover letter:', err); // Debug log
