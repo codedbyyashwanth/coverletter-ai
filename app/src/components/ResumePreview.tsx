@@ -32,8 +32,8 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
     );
   }
 
-  // Get all skills (now simplified)
-  const skills = resumeData.skills?.all || [];
+  // Get all skills
+  const skills = Array.isArray(resumeData.skills) ? resumeData.skills : [];
 
   return (
     <div className="space-y-6 max-h-[500px] overflow-auto pr-2">

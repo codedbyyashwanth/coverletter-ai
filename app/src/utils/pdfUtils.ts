@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { saveAs } from 'file-saver';
 import { pdf } from '@react-pdf/renderer';
 import { Document, Page } from '@react-pdf/renderer';

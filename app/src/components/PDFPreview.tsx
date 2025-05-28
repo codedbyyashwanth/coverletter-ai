@@ -1,13 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { PDFViewer } from '@react-pdf/renderer';
+import { PDFViewer, type DocumentProps } from '@react-pdf/renderer';
+
+// Error boundary component to catch PDF rendering errors
+class ErrorBoundary extends React.Component<{
+  children: React.ReactNode;
+  onError: () => void;
+}> {
+  state = { hasError: false };
+  
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error: Error) {
+    console.error("PDF Rendering Error:", error);
+    this.props.onError();
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
 
 interface PDFPreviewProps {
-  children: React.ReactNode;
+  children: React.ReactElement<DocumentProps>;
 }
 
 const PDFPreview: React.FC<PDFPreviewProps> = ({ children }) => {
   const [errorOccurred, setErrorOccurred] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+  const [, setRetryCount] = useState(0);
 
   // Reset error state when children change
   useEffect(() => {
@@ -36,49 +60,23 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ children }) => {
   }
 
   return (
-    <React.Fragment>
-      <ErrorBoundary onError={() => setErrorOccurred(true)}>
-        <div style={{ width: '100%', height: '100%', background: 'transparent' }}>
-          <PDFViewer
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
-              borderRadius: '8px',
-              backgroundColor: 'transparent'
-            }}
-            showToolbar={false}
-          >
-            {children}
-          </PDFViewer>
-        </div>
-      </ErrorBoundary>
-    </React.Fragment>
+    <ErrorBoundary onError={() => setErrorOccurred(true)}>
+      <div style={{ width: '100%', height: '100%', background: 'transparent' }}>
+        <PDFViewer
+          style={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            borderRadius: '8px',
+            backgroundColor: 'transparent'
+          }}
+          showToolbar={false}
+        >
+          {children}
+        </PDFViewer>
+      </div>
+    </ErrorBoundary>
   );
 };
-
-// Error boundary component to catch PDF rendering errors
-class ErrorBoundary extends React.Component<{
-  children: React.ReactNode;
-  onError: () => void;
-}> {
-  state = { hasError: false };
-  
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  
-  componentDidCatch(error: Error) {
-    console.error("PDF Rendering Error:", error);
-    this.props.onError();
-  }
-  
-  render() {
-    if (this.state.hasError) {
-      return null;
-    }
-    return this.props.children;
-  }
-}
 
 export default PDFPreview;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +16,7 @@ import { CoverLetterPreview } from '@/components/CoverLetterPreview';
 import { TemplateSelector } from '@/components/TemplateSelector';
 import { ExportOptions } from '@/components/ExportOptions';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, RefreshCw, Info } from 'lucide-react';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { CoverLetterData } from '@/types/coverLetter';
 import { useCoverLetterGenerator } from '@/hooks/useCoverLetterGenerator';

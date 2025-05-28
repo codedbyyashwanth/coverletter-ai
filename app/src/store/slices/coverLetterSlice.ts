@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { CoverLetterData, CoverLetterFields, Template } from '../../types/coverLetter';
 import type { RootState } from '../index';

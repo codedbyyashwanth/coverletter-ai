@@ -12,7 +12,7 @@ import {
 
 export const exportToPdf = async (
   coverLetterData: CoverLetterData,
-  content: string,
+  _content: string,
   filename: string = 'cover-letter.pdf',
   templateId: string = 'minimal'
 ): Promise<void> => {
@@ -72,7 +72,7 @@ export const copyToClipboard = async (content: string): Promise<void> => {
 };
 
 export const exportToWord = async (
-  coverLetterData: CoverLetterData,
+  _coverLetterData: CoverLetterData,
   content: string,
   filename: string = 'cover-letter.txt'
 ): Promise<void> => {

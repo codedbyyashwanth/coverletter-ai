@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 const ResumePage: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [, setResumeFile] = useState<File | null>(null);
   const [extractedData, setExtractedData] = useState<ResumeData | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [error, setError] = useState<string | null>(null);

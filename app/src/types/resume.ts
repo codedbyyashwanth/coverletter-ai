@@ -1,11 +1,10 @@
-
 export interface ResumeData {
     name: string;
+    email?: string;
+    phone?: string;
     profile?: string;
     experience?: Experience[];
     skills?: Skills;
-    email?: string;
-    phone?: string;
 }
 
 export interface Experience {
@@ -17,8 +16,6 @@ export interface Experience {
 }
 
 export interface Skills {
-    languages?: string[];
-    frontend?: string[];
-    backend?: string[];
-    other?: string[];
+    all: string[];
+    // ... any other properties your Skills interface might have
 }
