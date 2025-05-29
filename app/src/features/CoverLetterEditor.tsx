@@ -112,6 +112,7 @@ export const CoverLetterEditor: React.FC = () => {
                         size="sm"
                         onClick={handleResetChanges}
                         disabled={!hasUnsavedChanges}
+                        className='cursor-pointer'
                     >
                         <RotateCcw className="h-4 w-4 mr-2" />
                         Reset
@@ -120,6 +121,7 @@ export const CoverLetterEditor: React.FC = () => {
                         onClick={handleUpdatePreview}
                         disabled={!hasUnsavedChanges}
                         size="sm"
+                        className='cursor-pointer'
                     >
                         <Save className="h-4 w-4 mr-2" />
                         Update Preview
@@ -279,7 +281,7 @@ export const CoverLetterEditor: React.FC = () => {
                                             variant="outline"
                                             size="sm"
                                             onClick={setCurrentDate}
-                                            className="shrink-0"
+                                            className="shrink-0 cursor-pointer"
                                         >
                                             <Calendar className="h-4 w-4" />
                                         </Button>
@@ -358,7 +360,7 @@ export const CoverLetterEditor: React.FC = () => {
                 <Button
                     onClick={handleUpdatePreview}
                     disabled={!hasUnsavedChanges}
-                    className="w-full"
+                    className="w-full cursor-pointer"
                     size="lg"
                 >
                     <Save className="h-4 w-4 mr-2" />

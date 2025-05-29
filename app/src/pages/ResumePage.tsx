@@ -88,7 +88,7 @@ const ResumePage: React.FC = () => {
         <Button 
           onClick={handleContinue} 
           disabled={!extractedData || isExtracting}
-          className="flex items-center"
+          className="flex items-center cursor-pointer"
         >
           Continue to Job Details
           <ArrowRight className="ml-2 h-4 w-4" />

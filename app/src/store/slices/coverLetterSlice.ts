@@ -16,31 +16,31 @@ const initialTemplates: Template[] = [
         id: 'modern',
         name: 'Modern',
         type: 'modern',
-        previewUrl: 'https://img.freepik.com/free-vector/cover-letter-template-design_742173-29424.jpg',
+        previewUrl: './modern.png',
     },
     {
         id: 'classic',
         name: 'Classic',
         type: 'classic',
-        previewUrl: 'https://img.freepik.com/free-vector/simple-resignation-letter_23-2149291571.jpg',
+        previewUrl: './classic.png',
     },
     {
         id: 'creative',
         name: 'Creative',
         type: 'creative',
-        previewUrl: 'https://img.freepik.com/free-vector/modern-simple-laura-copywriter-seo-letter_23-2149021340.jpg',
+        previewUrl: './creative.png',
     },
     {
         id: 'minimal',
         name: 'Minimal',
         type: 'minimal',
-        previewUrl: 'https://img.freepik.com/free-vector/minimalist-duotone-sarah-construction-letter_23-2149007475.jpg',
+        previewUrl: './minimal.png',
     },
     {
         id: 'monogram',
         name: 'Monogram',
         type: 'monogram',
-        previewUrl: 'https://img.freepik.com/free-vector/minimalist-duotone-sarah-construction-letter_23-2149007475.jpg',
+        previewUrl: './monogram.png',
     },
 ];
 

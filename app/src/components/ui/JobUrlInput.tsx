@@ -57,7 +57,7 @@ export const JobUrlInput: React.FC<JobUrlInputProps> = ({ onJobScraped }) => {
         <Button 
           onClick={handleScrape} 
           disabled={isLoading}
-          className="whitespace-nowrap"
+          className="whitespace-nowrap cursor-pointer"
         >
           {isLoading ? (
             <>

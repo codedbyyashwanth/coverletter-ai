@@ -280,6 +280,7 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
               type="button" 
               onClick={handleAddRequirement}
               variant="outline"
+              className='cursor-pointer'
             >
               <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
@@ -300,6 +301,7 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className='cursor-pointer'
                     onClick={() => handleRemoveRequirement(index)}
                   >
                     <X className="h-4 w-4" />
@@ -330,6 +332,7 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
               type="button" 
               onClick={handleAddSkill}
               variant="outline"
+              className='cursor-pointer'
             >
               <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
@@ -348,7 +351,7 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
                   {skill}
                   <button
                     type="button"
-                    className="ml-2 text-primary hover:text-primary/80"
+                    className="ml-2 text-primary hover:text-primary/80 cursor-pointer"
                     onClick={() => handleRemoveSkill(index)}
                   >
                     <X className="h-3 w-3" />
@@ -361,7 +364,7 @@ export const JobDetailsForm: React.FC<JobDetailsFormProps> = ({
       </div>
       
       <div className="pt-4">
-        <Button type="submit" disabled={isSubmitting} className="w-full">
+        <Button type="submit" disabled={isSubmitting} className="w-full cursor-pointer">
           {isSubmitting ? (
             <>
               <Loader className="mr-2 h-4 w-4 animate-spin" />

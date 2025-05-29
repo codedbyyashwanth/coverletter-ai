@@ -19,7 +19,7 @@ const NotFoundPage: React.FC = () => {
       </p>
       <Button 
         onClick={handleGoHome}
-        className="flex items-center"
+        className="flex items-center cursor-pointer"
       >
         <Home className="mr-2 h-4 w-4" />
         Go to Home Page

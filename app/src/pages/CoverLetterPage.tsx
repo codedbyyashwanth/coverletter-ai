@@ -149,7 +149,7 @@ const CoverLetterPage: React.FC = () => {
             <Button 
               variant="outline" 
               onClick={handleBack}
-              className="flex items-center"
+              className="flex items-center cursor-pointer"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Job Details
@@ -158,7 +158,7 @@ const CoverLetterPage: React.FC = () => {
             <Button 
               onClick={handleRegenerateLetter}
               disabled={isLoading}
-              className="flex items-center"
+              className="flex items-center cursor-pointer"
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
               Try Again
@@ -189,7 +189,7 @@ const CoverLetterPage: React.FC = () => {
               variant="outline" 
               size="sm" 
               onClick={handleBack}
-              className="flex items-center"
+              className="flex items-center cursor-pointer"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Job Details
@@ -200,7 +200,7 @@ const CoverLetterPage: React.FC = () => {
               size="sm" 
               onClick={handleRegenerateLetter}
               disabled={isLoading}
-              className="flex items-center"
+              className="flex items-center cursor-pointer"
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
               Regenerate Cover Letter

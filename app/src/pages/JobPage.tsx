@@ -90,14 +90,14 @@ const JobPage: React.FC = () => {
         <Button 
           variant="outline" 
           onClick={handleBack}
-          className="flex items-center"
+          className="flex items-center cursor-pointer"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
         <Button 
           onClick={handleContinue}
-          className="flex items-center"
+          className="flex items-center cursor-pointer"
         >
           Continue to Cover Letter
           <ArrowRight className="ml-2 h-4 w-4" />

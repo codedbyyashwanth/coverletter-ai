@@ -146,7 +146,7 @@ export const ExportOptions: React.FC = () => {
       <Button
         onClick={handleExportPDF}
         disabled={isExportingPdf}
-        className="flex items-center"
+        className="flex items-center cursor-pointer"
       >
         {isExportingPdf ? (
           <>
@@ -164,7 +164,7 @@ export const ExportOptions: React.FC = () => {
       <Button
         onClick={handleCopyToClipboard}
         variant="outline"
-        className="flex items-center"
+        className="flex items-center cursor-pointer"
       >
         <Copy className="mr-2 h-4 w-4" />
         {isCopied ? 'Copied!' : 'Copy Text'}
