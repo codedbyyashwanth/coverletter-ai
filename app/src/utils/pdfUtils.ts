@@ -86,7 +86,7 @@ export const exportToPdf = async (
  * For now, we'll just save the plain text content
  */
 export const exportToWord = async (
-  coverLetterData: CoverLetterData,
+  _coverLetterData: CoverLetterData,
   content: string,
   filename: string
 ): Promise<void> => {
